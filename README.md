@@ -16,4 +16,4 @@ Authors:
 * Firstname Lastname
 * Firstname Lastnmae
 
-Generally everything is LICENSE'D under the ______________.
+Generally everything is LICENSE'D under the unlicense license.
