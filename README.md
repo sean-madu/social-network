@@ -13,7 +13,7 @@ Authors:
 * Sean Madu
 * Xinheng Xie
 * Favour Nwachuwku
-* Firstname Lastname
+* Mohammed Hussain
 * Firstname Lastnmae
 
 Generally everything is LICENSE'D under the unlicense license.
