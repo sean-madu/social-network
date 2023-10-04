@@ -14,6 +14,6 @@ Authors:
 * Xinheng Xie
 * Favour Nwachuwku
 * Mohammed Hussain
-* Firstname Lastnmae
+* Shahmeer Ali
 
 Generally everything is LICENSE'D under the unlicense license.
