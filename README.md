@@ -10,9 +10,9 @@ Contributors / Licensing
 
 Authors:
     
-* Firstname Lastname
-* Firstname Lastname
-* Firstname Lastname
+* Sean Madu
+* Xinheng Xie
+* Favour Nwachuwku
 * Firstname Lastname
 * Firstname Lastnmae
 
