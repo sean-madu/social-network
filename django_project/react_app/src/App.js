@@ -1,13 +1,20 @@
 import logo from './logo.svg';
 import 'bootstrap/dist/css/bootstrap.css';
 import './components/ListGroup'
-import ListGroup from './components/ListGroup';
+import LoginForm from './logIn/LoginForm';
+import SignupForm from './logIn/SignupForm';
 function App() {
   return (
 
 
     <div className="App">
-      <ListGroup />
+      <LoginForm>
+
+      </LoginForm>
+      <SignupForm>
+
+      </SignupForm>
+
     </div>
 
   );
