@@ -26,13 +26,14 @@ export default function LoginForm() {
 
         <div class="row">
           <form action="" method="">
-            <div class="mb-3">
-              <label for="loginUsername" class="form-label ">Username</label>
-              <input type="text" id="loginUsername" class="form-control" required />
+            <div class="mb-3 form-floating">
+
+              <input type="text" id="loginUsername" placeholder="username" class="form-control" required />
+              <label for="loginUsername" class="form-label " >Username</label>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 form-floating">
+              <input type="password" class="form-control" id="loginPassword" placeholder="password" required />
               <label for="loginPassword" class="form-label" >Password</label>
-              <input type="password" class="form-control" id="loginPassword" required />
             </div>
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">LOG IN</button>

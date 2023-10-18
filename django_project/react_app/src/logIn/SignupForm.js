@@ -7,7 +7,7 @@ export default function SignupForm() {
   console.log(fragments);
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Username in use :/
+      Username in use &#128547;
     </div>
   }
   return (
@@ -26,16 +26,20 @@ export default function SignupForm() {
         <div class="row">
           <form action="" method="">
             <div class="mb-3">
-              <label for="loginUsername" class="form-label ">Username</label>
-              <input type="text" id="loginUsername" class="form-control" required />
+              <div className="form-floating">
+                <input type="text" id="loginUsername" placeholder="username" class="form-control" required />
+                <label for="loginUsername" class="form-label ">Username</label>
+              </div>
+
             </div>
-            <div class="mb-3">
+            <div class="mb-3 form-floating">
+
+              <input type="password" class="form-control" placeholder="username" id="loginPassword" required />
               <label for="loginPassword" class="form-label" >Password</label>
-              <input type="password" class="form-control" id="loginPassword" required />
             </div>
-            <div class="mb-3">
+            <div class="mb-3 form-floating">
+              <input type="text" id="signupName" class="form-control" placeholder="username" required />
               <label for="signupName" class="form-label ">Name</label>
-              <input type="text" id="signupName" class="form-control" required />
             </div>
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">SIGN UP</button>
