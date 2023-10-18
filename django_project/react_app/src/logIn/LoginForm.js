@@ -1,5 +1,5 @@
 import "./LoginForm.css"
-
+import { Link } from "react-router-dom";
 export default function LoginForm() {
 
   //TODO the form tag work with django, fill in the action and method part of form
@@ -7,7 +7,7 @@ export default function LoginForm() {
   console.log(fragments);
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Combination of Username Password not found! If you have not made an account consider <a href="#" class="alert-link">Signing up </a>
+      Combination of Username and Password not found! If you have not made an account consider <a href="#" class="alert-link">Signing up </a>
     </div>
   }
   return (
@@ -37,7 +37,7 @@ export default function LoginForm() {
             </div>
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">LOG IN</button>
-              <button class="btn btn-secondary"> OR SIGN UP</button>
+              <Link to="/register" class="btn btn-secondary" > OR SIGN UP </Link>
             </div>
 
           </form>

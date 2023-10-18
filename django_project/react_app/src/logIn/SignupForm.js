@@ -7,7 +7,7 @@ export default function SignupForm() {
   console.log(fragments);
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Username in use &#128547;
+      Username in use &#128547; Do you mean to <a href="#" class="alert-link"> Login instead?</a>
     </div>
   }
   return (
