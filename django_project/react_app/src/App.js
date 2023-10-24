@@ -11,7 +11,6 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/register" element={<SignupForm />} />
-
       </Routes>
     </BrowserRouter>
 

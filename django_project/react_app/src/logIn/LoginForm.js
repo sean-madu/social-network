@@ -7,11 +7,11 @@ export default function LoginForm() {
   console.log(fragments);
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Combination of Username and Password not found! If you have not made an account consider <a href="#" class="alert-link">Signing up </a>
+      Combination of Username and Password not found! If you have not made an account consider <Link to="/register" class="alert-link" > making one here </Link>
     </div>
   }
   return (
-    <>
+    <div style={{ display: "flex", height: "70vh", justifyContent: "center", alignItems: "center" }}>
       <div class="container">
 
         <div class="row">
@@ -46,7 +46,7 @@ export default function LoginForm() {
 
       </div >
 
-    </>
+    </div >
   )
 
 }

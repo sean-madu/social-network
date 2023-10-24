@@ -1,5 +1,5 @@
 import "./LoginForm.css"
-
+import { Link } from "react-router-dom";
 export default function SignupForm() {
 
   //TODO the form tag work with django, fill in the action and method part of form
@@ -7,11 +7,11 @@ export default function SignupForm() {
   console.log(fragments);
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Username in use &#128547; Do you mean to <a href="#" class="alert-link"> Login instead?</a>
+      Username in use &#128547; Do you mean to <Link to="/" class="alert-link" > Login instead? </Link>
     </div>
   }
   return (
-    <>
+    <div style={{ display: "flex", height: "70vh", justifyContent: "center", alignItems: "center" }}>
       <div class="container">
 
         <div class="row">
@@ -43,6 +43,7 @@ export default function SignupForm() {
             </div>
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">SIGN UP</button>
+              <Link to="/" class="btn btn-secondary" > OR LOGIN</Link>
             </div>
 
           </form>
@@ -51,7 +52,7 @@ export default function SignupForm() {
 
       </div >
 
-    </>
+    </div>
   )
 
 }
