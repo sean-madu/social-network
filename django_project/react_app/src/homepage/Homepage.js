@@ -2,12 +2,14 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
+import PostList from '../inbox/PostList';
 import { useState } from 'react';
 
 
 export default function Homepage() {
   //TODO make the number actually change when user uses it 
   //We should query for the actual things here
+  //TODO add minimum heights to all the components
   let testNotifs = [
     { type: "comment", displayName: "sean", post: { text: "I love React so so so so so much so sos os os " }, comment: "Yoo this looks fire" },
     { type: "comment", displayName: "sean2", post: { text: "I love React" }, comment: "Wow please delete your account" },
@@ -81,11 +83,17 @@ export default function Homepage() {
           {makeButton(3, profileSettingPic, "Profile Settings", 0)}
         </div>
         <div class="tab-content  mx-auto" id="v-pills-tabContent">
+          <div className={activeNav == 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
+            <PostList />
+          </div>
           <div className={activeNav == 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
             <NotificationList comments={testNotifs} />
           </div>
           <div className={activeNav == 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
             <FriendRequestsList friendRequests={testFollows} />
+          </div>
+          <div className={activeNav == 3 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
+            <NotificationList comments={testNotifs} />
           </div>
         </div>
       </div >)
