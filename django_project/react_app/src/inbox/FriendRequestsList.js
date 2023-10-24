@@ -7,6 +7,7 @@ export default function FriendRequestsList(props) {
   const [requests, setRequests] = useState(props.friendRequests);
 
   //todo actually send stuff to the db
+  //TODO add react transitions to these
   const handleReject = (id) => {
     const remainingRequests = requests.filter((request) => id !== request.id);
     setRequests(remainingRequests);
@@ -58,14 +59,11 @@ export default function FriendRequestsList(props) {
     })
   }
 
-
-
-
   return (
     <>
       <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column" }} className='p-5'>
         <h1> Friend Requests </h1>
-        {requests.length == 0 && <h2> You dont have any friend requests </h2>}
+        {requests.length == 0 && <h2> You don't have any friend requests </h2>}
         <ul className="list-group">
           {makeListItems()}
         </ul>
