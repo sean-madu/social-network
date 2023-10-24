@@ -16,15 +16,8 @@ function App() {
   return (
 
 
-
-    <div className="App">
-      <NotificationList
-        comments={testNotifs} />
-
-      <FriendRequestsList friendRequests={testFollows} />
-
       <Homepage />
-    </div>
+
 
   );
 }
