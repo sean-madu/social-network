@@ -62,7 +62,7 @@ export default function FriendRequestsList(props) {
   return (
     <>
       <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column" }} className='p-5'>
-        <h1> Friend Requests </h1>
+        <h1> FRIEND REQUESTS </h1>
         {requests.length == 0 && <h2> You don't have any friend requests </h2>}
         <ul className="list-group">
           {makeListItems()}

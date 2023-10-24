@@ -51,7 +51,7 @@ export default function NotificationList(props) {
   return (
     <>
       <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column" }} className='p-5'>
-        <h1> Notifications </h1>
+        <h1> NOTIFICATIONS </h1>
         {props.comments.length == 0 && <h2> Nobody has commented or liked any of your posts </h2>}
         <ul className="list-group">
           {makeListItems()}
