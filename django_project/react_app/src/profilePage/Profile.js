@@ -17,7 +17,7 @@ export default function ProfilePage() {
       <>
         <div style={{ position: 'fixed', top: "10%", left: "25%", backgroundColor: "white", width: "50%" }} className='d-flex justify-content-center'>
 
-          <form >
+          <form className='p-5'>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Username</label>
               <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com" />
@@ -30,6 +30,10 @@ export default function ProfilePage() {
               <label for="exampleFormControlInput1" class="form-label">Link GitHub Activity with username</label>
               <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Or however we do this" />
             </div>
+
+            <button class="btn btn-primary mb-5">SUBMIT</button>
+
+
           </form>
 
         </div>
@@ -90,10 +94,10 @@ export default function ProfilePage() {
                         EDIT PROFILE
                       </button>
 
-                      <div class="offcanvas offcanvas-top show text-bg-dark" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel">
+                      <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel" style={{ backgroundColor: "black" }}>
                         <div class="offcanvas-header">
-                          <h5 class="offcanvas-title" id="offcanvasExampleLabel">Edit Profile</h5>
-                          <button type="button" class="btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                          <h5 class="offcanvas-title" id="offcanvasExampleLabel" style={{ color: "wheat" }}>Edit Profile</h5>
+                          <button type="button" class="btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" ></button>
                         </div>
                         <div class="offcanvas-body">
                           {editProfileDiv()}
