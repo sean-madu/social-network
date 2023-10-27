@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.css';
 
+
+
 export default function NotificationList(props) {
 
   const makeListItems = () => {
@@ -47,7 +49,7 @@ export default function NotificationList(props) {
     })
   }
 
-  console.log(props.comments);
+
   return (
     <>
       <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column" }} className='p-5'>
@@ -60,3 +62,4 @@ export default function NotificationList(props) {
     </>
   )
 }
+

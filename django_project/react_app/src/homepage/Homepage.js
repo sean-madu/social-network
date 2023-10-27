@@ -6,8 +6,10 @@ import { useState } from 'react';
 
 
 export default function Homepage() {
-  //TODO make the number actually change when user uses it 
+
+
   //We should query for the actual things here
+  //Maybe recheck these every couple seconds?
   let testNotifs = [
     { type: "comment", displayName: "sean", post: { text: "I love React so so so so so much so sos os os " }, comment: "Yoo this looks fire" },
     { type: "comment", displayName: "sean2", post: { text: "I love React" }, comment: "Wow please delete your account" },
@@ -16,6 +18,7 @@ export default function Homepage() {
   ];
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
 
+  const [friendRequests, setFriendRequests] = useState(testFollows);
   const [activeNav, setActiveNav] = useState(1);
 
 
@@ -71,13 +74,14 @@ export default function Homepage() {
   }
 
 
+
   const renderActiveTabs = () => {
     return (
       <div class="d-flex align-items-center w-75">
         <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
           {makeButton(0, homePic, "Home", 0)}
           {makeButton(1, inboxPic, "Inbox", 100)}
-          {makeButton(2, friendRequestsPic, "Friend Requests", 2)}
+          {makeButton(2, friendRequestsPic, "Friend Requests", friendRequests.length)}
           {makeButton(3, profileSettingPic, "Profile Settings", 0)}
         </div>
         <div class="tab-content  mx-auto" id="v-pills-tabContent">
@@ -85,7 +89,7 @@ export default function Homepage() {
             <NotificationList comments={testNotifs} />
           </div>
           <div className={activeNav == 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
-            <FriendRequestsList friendRequests={testFollows} />
+            <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
           </div>
         </div>
       </div >)

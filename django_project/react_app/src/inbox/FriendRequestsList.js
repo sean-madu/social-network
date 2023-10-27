@@ -4,18 +4,21 @@ import { useState } from 'react';
 
 
 export default function FriendRequestsList(props) {
-  const [requests, setRequests] = useState(props.friendRequests);
 
+  let requests = props.friendRequests
+  let setRequests = props.setRequests
   //todo actually send stuff to the db
   //TODO add react transitions to these
   const handleReject = (id) => {
     const remainingRequests = requests.filter((request) => id !== request.id);
     setRequests(remainingRequests);
+
   }
 
   const handleAccept = (id) => {
     const remainingRequests = requests.filter((request) => id !== request.id);
     setRequests(remainingRequests);
+
   }
 
   const makeListItems = () => {
@@ -58,6 +61,8 @@ export default function FriendRequestsList(props) {
       )
     })
   }
+
+
 
   return (
     <>

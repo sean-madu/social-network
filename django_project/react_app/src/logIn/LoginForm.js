@@ -10,6 +10,8 @@ export default function LoginForm() {
       Combination of Username and Password not found! If you have not made an account consider <Link to="/register" class="alert-link" > making one here </Link>
     </div>
   }
+
+
   return (
     <div style={{ display: "flex", height: "70vh", justifyContent: "center", alignItems: "center" }}>
       <div class="container">
@@ -38,6 +40,8 @@ export default function LoginForm() {
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">LOG IN</button>
               <Link to="/register" class="btn btn-secondary" > OR SIGN UP </Link>
+              <Link to="/defaultUser" > Place holder till user backend is finished</Link>
+
             </div>
 
           </form>
