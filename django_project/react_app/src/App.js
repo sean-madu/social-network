@@ -1,10 +1,13 @@
 import logo from './logo.svg';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './components/ListGroup'
 
 import LoginForm from './logIn/LoginForm';
 import SignupForm from './logIn/SignupForm';
 import Homepage from './homepage/Homepage';
+import Post from './createPost/Post';
+import Stream from './stream/Stream';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
