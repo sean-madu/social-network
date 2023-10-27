@@ -4,6 +4,8 @@ import './components/ListGroup'
 
 import LoginForm from './logIn/LoginForm';
 import SignupForm from './logIn/SignupForm';
+import Homepage from './homepage/Homepage';
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/register" element={<SignupForm />} />
+        <Route path="/defaultUser" element={<Homepage />} />
       </Routes>
     </BrowserRouter>
 
