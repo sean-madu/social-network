@@ -46,7 +46,21 @@ export default function Homepage() {
 
   ];
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
-
+  let testPosts = [
+    {
+      id: 1,
+      content: 'This is the content of post 1.',
+      liked: false,
+      author: 'Obama!',
+    },
+    {
+      id: 2,
+      content: 'This is the content of post 2.',
+      liked: false,
+      author: 'Rando123',
+    },
+    // Add more posts as needed
+  ];
   const [friendRequests, setFriendRequests] = useState(testFollows);
   const [activeNav, setActiveNav] = useState(0);
 
@@ -124,7 +138,7 @@ export default function Homepage() {
 
         <div className="tab-content  mx-auto" style={{ width: "85%" }} id="v-pills-tabContent">
           <div className={activeNav === 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <Posts />
+            <Posts posts={testPosts} />
           </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
             <NotificationList comments={testNotifs} />

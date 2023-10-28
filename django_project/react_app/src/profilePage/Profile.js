@@ -2,8 +2,26 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/offcanvas';
 import { useState } from 'react';
-
+import Posts from '../stream/Stream';
 export default function ProfilePage() {
+
+  let testUserPosts = [
+    {
+      id: 1,
+      content: 'This is the content of post 1.',
+      liked: false,
+      author: 'Obama!',
+      proxy: true
+    },
+    {
+      id: 2,
+      content: 'This is the content of post 2.',
+      liked: false,
+      author: 'Rando123',
+      proxy: true
+    },
+    // Add more posts as needed
+  ];
 
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -171,7 +189,7 @@ export default function ProfilePage() {
           </div>
         </div>
         <div className='row'>
-            <h1> THIS IS WHERE POSTS WILL GO</h1>
+            <Posts posts={testUserPosts} />
           </div>
         </div>
       </div>
