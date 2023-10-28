@@ -1,8 +1,23 @@
 import 'bootstrap/dist/css/bootstrap.css';
-
-
+import PostView from '../stream/PostView';
 
 export default function NotificationList(props) {
+
+  let testPosts = [
+    {
+      id: 1,
+      content: 'This is the content of post 1.',
+      liked: false,
+      author: 'Obama',
+    },
+    {
+      id: 2,
+      content: 'This is the content of post 2.',
+      liked: false,
+      author: 'Rando123',
+    },
+    // Add more posts as needed
+  ];
 
   const makeListItems = () => {
     return props.comments.map((item) => {
@@ -40,7 +55,7 @@ export default function NotificationList(props) {
             <div className='row justify-content-center'>
               <div className='card' style={{ width: "18rem", overflow: "hidden", textOverflow: "ellipsis" }}>
                 <div className='card-body' >
-                  <p className='card-text'>{item.post.text}</p>
+                  <PostView post={item.post} />
                 </div>
               </div>
             </div>

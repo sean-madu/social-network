@@ -16,15 +16,39 @@ export default function Homepage() {
   //Consider breaking down into components if this gets to big
   // Places to break it dowm. Navbar buttons can be one component. Whole navbar can be one component
   let testNotifs = [
-    { type: "comment", displayName: "sean", post: { text: "I love React so so so so so much so sos os os " }, comment: "Yoo this looks fire" },
-    { type: "comment", displayName: "sean2", post: { text: "I love React" }, comment: "Wow please delete your account" },
-    { type: "like", displayName: "sham1", post: { text: "Setting up React is a pain" } }
+    {
+      type: "comment", displayName: "sean", post: {
+        id: 1,
+        content: 'This is the content of post 1.',
+        liked: false,
+        author: 'Obama',
+        proxy: true
+      }, comment: "Yoo this looks fire"
+    },
+    {
+      type: "comment", displayName: "sean2", post: {
+        id: 2,
+        content: 'This is the content of post 2.',
+        liked: true,
+        author: 'Rando123',
+        proxy: true
+      }, comment: "Wow please delete your account"
+    },
+    {
+      type: "like", displayName: "sham1", post: {
+        id: 3,
+        content: 'This is the content of post 3.',
+        liked: true,
+        author: 'Rando123',
+        proxy: true
+      }
+    }
 
   ];
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
 
   const [friendRequests, setFriendRequests] = useState(testFollows);
-  const [activeNav, setActiveNav] = useState(1);
+  const [activeNav, setActiveNav] = useState(0);
 
 
   const handleSelectActiveTab = (val) => {

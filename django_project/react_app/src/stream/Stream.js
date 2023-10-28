@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import PostView from './PostView';
 /*
 interface Post {
   id: number;
@@ -14,7 +14,7 @@ const Posts = () => {
       id: 1,
       content: 'This is the content of post 1.',
       liked: false,
-      author: 'Obama',
+      author: 'Obama!',
     },
     {
       id: 2,
@@ -25,13 +25,7 @@ const Posts = () => {
     // Add more posts as needed
   ]);
 
-  const handleHeartClick = (postId) => {
-    setPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.id === postId ? { ...post, liked: !post.liked } : post
-      )
-    );
-  };
+
 
   return (
     <>
@@ -46,23 +40,7 @@ const Posts = () => {
               <ul className="list-group">
                 {posts.map(post => (
                   <li key={post.id} className="list-group-item">
-                    <div className="d-flex align-items-center mb-2">
-                      <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
-                      <small>{post.author}</small>
-                    </div>
-                    <p>{post.content}</p>
-                    <button
-                      className={`btn btn-link text-${post.liked ? 'danger' : 'white'}`}
-                      onClick={() => handleHeartClick(post.id)}
-                      style={{
-                        border: 'none',
-                        borderRadius: '50%',
-                        padding: '8px',
-                        transform: 'scale(0.9)'
-                      }}
-                    >
-                      <i className={`bi bi-heart${post.liked ? '-fill' : ''}`} style={{ fontSize: '1.5rem', color: "red" }}></i>
-                    </button>
+                    <PostView post={post} setPosts={setPosts} />
                   </li>
                 ))}
               </ul>
