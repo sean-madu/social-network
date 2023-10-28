@@ -1,24 +1,24 @@
 import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-const Post: React.FC = () => {
+export default function Post() {
   // State for post content, selected format, and selected image
-  const [postContent, setPostContent] = useState<string>('');
-  const [selectedOption, setSelectedOption] = useState<string>('plain');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [postContent, setPostContent] = useState('');
+  const [selectedOption, setSelectedOption] = useState('plain');
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Handle textarea input change
-  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e) => {
     setPostContent(e.target.value);
   };
 
   // Handle format selection change
-  const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  const handleSelectChange = (e) => {
     setSelectedOption(e.target.value);
   };
 
   // Handle image selection
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files && e.target.files[0];
     setSelectedImage(file);
   };
@@ -122,4 +122,3 @@ const Post: React.FC = () => {
   );
 };
 
-export default Post;

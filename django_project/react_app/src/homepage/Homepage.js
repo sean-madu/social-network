@@ -4,7 +4,7 @@ import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
 import ProfilePage from '../profilePage/Profile';
 import { useState } from 'react';
-
+import Post from '../createPost/Post';
 
 export default function Homepage() {
 
@@ -101,6 +101,9 @@ export default function Homepage() {
           </div>
           <div className={activeNav === 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
+          </div>
+          <div className={activeNav === 3 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <Post />
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage />

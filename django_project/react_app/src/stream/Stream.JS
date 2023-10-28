@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 
+/*
 interface Post {
   id: number;
   content: string;
   liked: boolean;
   author: string;
-}
+}*/
 
-const Posts: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([
+const Posts = () => {
+  const [posts, setPosts] = useState([
     {
       id: 1,
       content: 'This is the content of post 1.',
@@ -24,7 +25,7 @@ const Posts: React.FC = () => {
     // Add more posts as needed
   ]);
 
-  const handleHeartClick = (postId: number) => {
+  const handleHeartClick = (postId) => {
     setPosts(prevPosts =>
       prevPosts.map(post =>
         post.id === postId ? { ...post, liked: !post.liked } : post
