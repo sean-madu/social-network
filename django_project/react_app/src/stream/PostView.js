@@ -1,5 +1,6 @@
-
-
+//These can have multiple options for dynamic rendering
+//Proxy: Remove unnecessary features and just display the content of the post
+//User: Allow for editing the post and other things only the maker of the post can do
 export default function PostView(props) {
 
 
@@ -13,6 +14,28 @@ export default function PostView(props) {
     );
   };
 
+  const getUserOptions = () => {
+    return (
+      <>
+        <div className="container">
+          <div className="row">
+            <div className="col">
+              <button className="btn btn-primary">
+                <i class="bi bi-pencil-fill"></i>
+                <small> EDIT</small>
+              </button>
+            </div>
+            <div className="col">
+              <button className="btn btn-danger">
+                <i class="bi bi-trash3-fill"></i>
+                <small> DELETE</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
   const getButton = () => {
 
     if (post.proxy == null)
@@ -39,6 +62,7 @@ export default function PostView(props) {
       <small>{post.author}</small>
     </div>
     <p>{post.content}</p>
+    {post.user && getUserOptions()}
     {getButton()}
 
   </>

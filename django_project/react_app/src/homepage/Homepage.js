@@ -69,6 +69,8 @@ export default function Homepage() {
     setActiveNav(val);
   }
 
+
+  //Makes all the navbar buttons
   const makeButton = (num, svg, name, alertNum) => {
     return (
       <button className={activeNav === num ? "nav-link  active" : " nav-link"} onClick={(e) => { handleSelectActiveTab(num) }} id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
@@ -124,6 +126,7 @@ export default function Homepage() {
     </svg>
   }
 
+  //Makes the navbar content
   const renderActiveTabs = () => {
     return (
       <div className="d-flex align-items-center w-100 h-100">

@@ -1,12 +1,28 @@
 import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
-
+import serverAddress from '../serverAddress';
+import SERVER_ADDR from '../serverAddress';
 export default function Post() {
   // State for post content, selected format, and selected image
   const [postContent, setPostContent] = useState('');
   const [selectedOption, setSelectedOption] = useState('plain');
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const createPostItem = () => {
+    //TODO handle images
+    return {
+      type: "post",
+      title: "Forgot to add titles to Posts whoops",
+      contentType: `text/${selectedOption}`,
+      source: { SERVER_ADDR },
+      origin: { SERVER_ADDR },
+      content: document.getElementById('postContent').textContent,
+      author: "858bbf8f-14df-47ae-b75a-842ada24e01a",
+      comments: "{}",
+      unlisted: "true",
+
+    }
+  }
   // Handle textarea input change
   const handleInputChange = (e) => {
     setPostContent(e.target.value);
@@ -25,7 +41,41 @@ export default function Post() {
 
   // Handle post button click
   const handlePostClick = () => {
-    alert('Post button clicked!');
+    /*
+    //Temp for now but we have to post default author first ig?
+    fetch(`${serverAddress}authors/`,
+      {
+        method: "POST",
+        body: JSON.stringify(
+          {
+            type: "author",
+            id: `${SERVER_ADDR}authors/9de17f29c12e8f97bcbbd34cc908f1baba40658e`,
+            displayName: "Lara Croft",
+            url: "http://127.0.0.1:5454/authors/9de17f29c12e8f97bcbbd34cc908f1baba40658e",
+            github: "http://github.com/laracroft",
+            host: `${SERVER_ADDR}`,
+            profileImage: "https://i.imgur.com/k7XVwpB.jpeg"
+
+          }
+        ),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+      .then((res) => { res.json() })
+      .then((json) => { console.log(json) })
+      */
+
+    fetch(`${SERVER_ADDR}authors/858bbf8f-14df-47ae-b75a-842ada24e01a/posts/`,
+      {
+        method: "POST",
+        body: JSON.stringify(createPostItem()),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+      .then((res) => { res.json() })
+      .then((json) => { console.log(json) })
   };
 
   return (
@@ -54,6 +104,7 @@ export default function Post() {
             {/* Textarea for post content */}
             <div className="mb-3 d-flex">
               <textarea
+                id='postContent'
                 value={postContent}
                 onChange={handleInputChange}
                 rows={2}

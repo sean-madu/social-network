@@ -11,14 +11,16 @@ export default function ProfilePage() {
       content: 'This is the content of post 1.',
       liked: false,
       author: 'Obama!',
-      proxy: true
+      proxy: true,
+      user: true
     },
     {
       id: 2,
       content: 'This is the content of post 2.',
       liked: false,
       author: 'Rando123',
-      proxy: true
+      proxy: true,
+      user: true
     },
     // Add more posts as needed
   ];
@@ -188,6 +190,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+          {/* Posts by the User */}
         <div className='row'>
             <Posts posts={testUserPosts} />
           </div>
