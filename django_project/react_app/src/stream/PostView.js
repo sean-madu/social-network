@@ -14,6 +14,17 @@ export default function PostView(props) {
     );
   };
 
+  const handleDelete = (postId) => {
+
+    props.setPosts((prevPosts) => {
+
+      return prevPosts.filter((post) =>
+        post.id !== postId
+      )
+    });
+  }
+
+
   const getUserOptions = () => {
     return (
       <>
@@ -26,7 +37,7 @@ export default function PostView(props) {
               </button>
             </div>
             <div className="col">
-              <button className="btn btn-danger">
+              <button onClick={() => handleDelete(post.id)} className="btn btn-danger">
                 <i class="bi bi-trash3-fill"></i>
                 <small> DELETE</small>
               </button>
