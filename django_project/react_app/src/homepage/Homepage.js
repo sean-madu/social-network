@@ -5,6 +5,8 @@ import FriendRequestsList from '../inbox/FriendRequestsList';
 import ProfilePage from '../profilePage/Profile';
 import { useState } from 'react';
 import Post from '../createPost/Post';
+import Posts from '../stream/Stream';
+
 
 export default function Homepage() {
 
@@ -95,7 +97,11 @@ export default function Homepage() {
           {makeButton(4, navProfilePic, "Profile", 0)}
 
         </div>
+
         <div className="tab-content  mx-auto" style={{ width: "85%" }} id="v-pills-tabContent">
+          <div className={activeNav === 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <Posts />
+          </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
             <NotificationList comments={testNotifs} />
           </div>
@@ -108,6 +114,7 @@ export default function Homepage() {
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage />
           </div>
+
         </div>
       </div >)
 
