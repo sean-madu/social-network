@@ -1,11 +1,15 @@
 //These can have multiple options for dynamic rendering
 //Proxy: Remove unnecessary features and just display the content of the post
 //User: Allow for editing the post and other things only the maker of the post can do
+
+import { useState } from "react";
+import Post from "../createPost/Post";
+
 export default function PostView(props) {
 
 
   let post = props.post;
-
+  const [editing, setEditing] = useState(false);
   const handleHeartClick = (postId) => {
     props.setPosts(prevPosts =>
       prevPosts.map(post =>
@@ -24,6 +28,10 @@ export default function PostView(props) {
     });
   }
 
+  const handleEdit = (postId) => {
+    setEditing(!editing);
+  }
+
 
   const getUserOptions = () => {
     return (
@@ -31,7 +39,7 @@ export default function PostView(props) {
         <div className="container">
           <div className="row">
             <div className="col">
-              <button className="btn btn-primary">
+              <button onClick={() => handleEdit(post.id)} className="btn btn-primary">
                 <i class="bi bi-pencil-fill"></i>
                 <small> EDIT</small>
               </button>
@@ -75,7 +83,7 @@ export default function PostView(props) {
     <p>{post.content}</p>
     {post.user && getUserOptions()}
     {getButton()}
-
+    {editing && <Post />}
   </>
 
 }
