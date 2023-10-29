@@ -3,21 +3,7 @@ import PostView from '../stream/PostView';
 
 export default function NotificationList(props) {
 
-  let testPosts = [
-    {
-      id: 1,
-      content: 'This is the content of post 1.',
-      liked: false,
-      author: 'Obama',
-    },
-    {
-      id: 2,
-      content: 'This is the content of post 2.',
-      liked: false,
-      author: 'Rando123',
-    },
-    // Add more posts as needed
-  ];
+
 
   const makeListItems = () => {
     return props.comments.map((item) => {

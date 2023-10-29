@@ -191,7 +191,7 @@ export default function ProfilePage() {
           </div>
         </div>
           {/* Posts by the User */}
-        <div className='row'>
+          <div className='row' >
             <Posts posts={testUserPosts} />
           </div>
         </div>

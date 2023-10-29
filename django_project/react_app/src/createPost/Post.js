@@ -11,7 +11,7 @@ export default function Post(props) {
   const [selectedImage, setSelectedImage] = useState(null);
 
 
-  console.log(props)
+
   const createPostItem = () => {
 
     //TODO handle images

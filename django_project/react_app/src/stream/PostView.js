@@ -7,7 +7,6 @@ import Post from "../createPost/Post";
 
 export default function PostView(props) {
 
-
   let post = props.post;
   const [editing, setEditing] = useState(false);
   const handleHeartClick = (postId) => {
@@ -65,7 +64,7 @@ export default function PostView(props) {
 
     {post.user && getUserOptions()}
 
-    {!props.proxy === null && <button
+    {!(post.proxy === true) && <button
       className={`btn btn-link text-${post.liked ? 'danger' : 'white'}`}
       onClick={() => handleHeartClick(post.id)}
       style={{
