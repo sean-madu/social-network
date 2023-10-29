@@ -1,8 +1,37 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/offcanvas';
-
+import { useState } from 'react';
+import Posts from '../stream/Stream';
 export default function ProfilePage() {
+
+  let testUserPosts = [
+    {
+      id: 1,
+      content: 'This is the content of post 1.',
+      liked: false,
+      author: 'Obama!',
+      proxy: true,
+      user: true
+    },
+    {
+      id: 2,
+      content: 'This is the content of post 2.',
+      liked: false,
+      author: 'Rando123',
+      proxy: true,
+      user: true
+    },
+    // Add more posts as needed
+  ];
+
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // Handle image selection
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    setSelectedImage(file);
+  };
 
   let profilePicDim = "150"
   let getProfilePic = () => {
@@ -30,6 +59,27 @@ export default function ProfilePage() {
               <label for="exampleFormControlInput1" class="form-label">Link GitHub Activity with username</label>
               <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Or however we do this" />
             </div>
+            {/* Image Upload */}
+            <div className="mb-3">
+              <label className="mb-0">Upload Image:</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="form-control"
+              />
+            </div>
+
+            {/* Display selected image */}
+            {selectedImage && (
+              <div className="mb-3">
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="Selected"
+                  className="img-fluid"
+                />
+              </div>
+            )}
 
             <button class="btn btn-primary mb-5">SUBMIT</button>
 
@@ -140,8 +190,9 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-        <div className='row'>
-            <h1> THIS IS WHERE POSTS WILL GO</h1>
+          {/* Posts by the User */}
+          <div className='row' >
+            <Posts posts={testUserPosts} />
           </div>
         </div>
       </div>

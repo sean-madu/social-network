@@ -4,6 +4,8 @@ import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
 import ProfilePage from '../profilePage/Profile';
 import { useState } from 'react';
+import Post from '../createPost/Post';
+import Posts from '../stream/Stream';
 
 
 export default function Homepage() {
@@ -14,21 +16,61 @@ export default function Homepage() {
   //Consider breaking down into components if this gets to big
   // Places to break it dowm. Navbar buttons can be one component. Whole navbar can be one component
   let testNotifs = [
-    { type: "comment", displayName: "sean", post: { text: "I love React so so so so so much so sos os os " }, comment: "Yoo this looks fire" },
-    { type: "comment", displayName: "sean2", post: { text: "I love React" }, comment: "Wow please delete your account" },
-    { type: "like", displayName: "sham1", post: { text: "Setting up React is a pain" } }
+    {
+      type: "comment", displayName: "sean", post: {
+        id: 1,
+        content: 'This is the content of post 1.',
+        liked: false,
+        author: 'Obama',
+        proxy: true
+      }, comment: "Yoo this looks fire"
+    },
+    {
+      type: "comment", displayName: "sean2", post: {
+        id: 2,
+        content: 'This is the content of post 2.',
+        liked: true,
+        author: 'Rando123',
+        proxy: true
+      }, comment: "Wow please delete your account"
+    },
+    {
+      type: "like", displayName: "sham1", post: {
+        id: 3,
+        content: 'This is the content of post 3.',
+        liked: true,
+        author: 'Rando123',
+        proxy: true
+      }
+    }
 
   ];
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
-
+  let testPosts = [
+    {
+      id: 1,
+      content: 'This is the content of post 1.',
+      liked: false,
+      author: 'Obama!',
+    },
+    {
+      id: 2,
+      content: 'This is the content of post 2.',
+      liked: false,
+      author: 'Rando123',
+    },
+    // Add more posts as needed
+  ];
   const [friendRequests, setFriendRequests] = useState(testFollows);
-  const [activeNav, setActiveNav] = useState(1);
+  const [activeNav, setActiveNav] = useState(0);
 
 
   const handleSelectActiveTab = (val) => {
     setActiveNav(val);
   }
 
+
+  //Makes all the navbar buttons
   const makeButton = (num, svg, name, alertNum) => {
     return (
       <button className={activeNav === num ? "nav-link  active" : " nav-link"} onClick={(e) => { handleSelectActiveTab(num) }} id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
@@ -84,6 +126,7 @@ export default function Homepage() {
     </svg>
   }
 
+  //Makes the navbar content
   const renderActiveTabs = () => {
     return (
       <div className="d-flex align-items-center w-100 h-100">
@@ -95,16 +138,24 @@ export default function Homepage() {
           {makeButton(4, navProfilePic, "Profile", 0)}
 
         </div>
+
         <div className="tab-content  mx-auto" style={{ width: "85%" }} id="v-pills-tabContent">
+          <div className={activeNav === 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <Posts posts={testPosts} />
+          </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
             <NotificationList comments={testNotifs} />
           </div>
           <div className={activeNav === 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
           </div>
+          <div className={activeNav === 3 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <Post />
+          </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage />
           </div>
+
         </div>
       </div >)
 

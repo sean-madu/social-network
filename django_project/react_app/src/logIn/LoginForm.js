@@ -5,6 +5,7 @@ export default function LoginForm() {
   //TODO the form tag work with django, fill in the action and method part of form
   let fragments = window.location.hash;
   console.log(fragments);
+  //If not found then display a warning
   const getWarning = () => {
     return fragments.length != 0 && <div class="alert alert-danger" role="alert">
       Combination of Username and Password not found! If you have not made an account consider <Link to="/register" class="alert-link" > making one here </Link>
