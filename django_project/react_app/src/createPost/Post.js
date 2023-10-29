@@ -1,14 +1,19 @@
 import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
-import serverAddress from '../serverAddress';
+
 import SERVER_ADDR from '../serverAddress';
-export default function Post() {
+//Props will only ever be there if we are editing and not posting
+export default function Post(props) {
+  let editing = Object.keys(props).length != 0;
   // State for post content, selected format, and selected image
-  const [postContent, setPostContent] = useState('');
+  const [postContent, setPostContent] = useState(editing ? props.content : '');
   const [selectedOption, setSelectedOption] = useState('plain');
   const [selectedImage, setSelectedImage] = useState(null);
 
+
+  console.log(props)
   const createPostItem = () => {
+
     //TODO handle images
     return {
       type: "post",
@@ -113,8 +118,10 @@ export default function Post() {
               />
             </div>
 
+
             {/* Image Upload */}
-            <div className="mb-3">
+            {/* Editing images looks like work so not allowed for now*/}
+            {!editing && <div className="mb-3">
               <label className="mb-0">Upload Image:</label>
               <input
                 type="file"
@@ -122,7 +129,7 @@ export default function Post() {
                 onChange={handleImageChange}
                 className="form-control"
               />
-            </div>
+            </div>}
 
             {/* Display selected image */}
             {selectedImage && (
