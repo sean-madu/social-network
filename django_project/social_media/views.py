@@ -70,16 +70,20 @@ def PostList(request, author_id):
             return Response(serializer.data)
 
         elif request.method == 'POST':
+            print(Author.objects.filter(id=author.id).exists())
+            print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.id  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
-
             if serializer.is_valid():
+                print(serializer._validated_data)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    except Author.DoesNotExist:
+    except Author.DoesNotExist as e:
+        
+        print(e)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
