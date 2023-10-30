@@ -44,7 +44,6 @@ export default function SignupForm() {
           window.location.href = window.location.href + "#failed";
         }
       })
-
   }
 
   return (

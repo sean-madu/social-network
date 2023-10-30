@@ -20,21 +20,6 @@ class Author(models.Model):
     def __str__(self):
         return self.displayName
 
-class Comment(models.Model):
-    # enforce handle content types
-    content_types = (
-        ('text/markdown', 'Markdown'),
-        ('text/plain', 'Plain Text'),
-        ('application/base64', 'Base64-encoded'),
-        ('image/png;base64', 'Embedded PNG'),
-        ('image/jpeg;base64', 'Embedded JPEG'),
-    )
-    contentType = models.CharField(max_length=255, choices=content_types, default='text/plain')
-    
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    comment = models.TextField(max_length=255)
-    published = models.DateTimeField(auto_now_add=True, editable=False)
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
 class Post(models.Model):
     # enforce handle content types
@@ -87,3 +72,20 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+class Comment(models.Model):
+    # enforce handle content types
+    content_types = (
+        ('text/markdown', 'Markdown'),
+        ('text/plain', 'Plain Text'),
+        ('application/base64', 'Base64-encoded'),
+        ('image/png;base64', 'Embedded PNG'),
+        ('image/jpeg;base64', 'Embedded JPEG'),
+    )
+    contentType = models.CharField(max_length=255, choices=content_types, default='text/plain')
+    
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE) 
+    comment = models.TextField(max_length=255)
+    published = models.DateTimeField(auto_now_add=True, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
