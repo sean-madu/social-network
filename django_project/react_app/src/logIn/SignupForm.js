@@ -24,12 +24,7 @@ export default function SignupForm() {
         method: "POST",
         body: JSON.stringify(
           {
-            type: "author",
             displayName: `${document.getElementById("loginUsername").value}`,
-            url: `${SERVER_ADDR}profile?profile=${document.getElementById("loginUsername").value}`,
-            github: "http://github.com/laracroft",
-            host: `${SERVER_ADDR}`,
-            profileImage: "https://i.imgur.com/k7XVwpB.jpeg"
 
           }
         ),
