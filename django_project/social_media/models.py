@@ -12,9 +12,6 @@ class Author(models.Model):
 
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
-        if 'domain' in kwargs:
-            self.host = f"http://{kwargs['domain']}"
-        
         if not self.url:
             self.url = self.host + reverse('author-detail', kwargs={'author_id': self.id})
         super().save(*args, **kwargs)
@@ -24,10 +21,19 @@ class Author(models.Model):
         return self.displayName
 
 class Comment(models.Model):
+    # enforce handle content types
+    content_types = (
+        ('text/markdown', 'Markdown'),
+        ('text/plain', 'Plain Text'),
+        ('application/base64', 'Base64-encoded'),
+        ('image/png;base64', 'Embedded PNG'),
+        ('image/jpeg;base64', 'Embedded JPEG'),
+    )
+    contentType = models.CharField(max_length=255, choices=content_types, default='text/plain')
+    
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    comment = models.TextField()
-    contentType = models.CharField(max_length=255)
-    published = models.DateTimeField()
+    comment = models.TextField(max_length=255)
+    published = models.DateTimeField(auto_now_add=True, editable=False)
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
 class Post(models.Model):
@@ -53,7 +59,7 @@ class Post(models.Model):
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
     description = models.TextField(default="Why the fuck is this here", editable=False)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, editable=False)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
     categories = models.JSONField(null=True)
     count = models.IntegerField(default=0)
     comments = models.URLField(editable=False)
@@ -67,10 +73,10 @@ class Post(models.Model):
         url = current_host + reverse('post-detail', kwargs={'author_id': author_id, 'post_id': str(self.id)})
         return url
 
+    
+
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
-
-        self.author = Author.objects.get(id="f3c4b7c9-08d6-4963-ba57-1d27a1998d46")
         if not self.origin:
             self.origin = self.generate_origin_url()
         if not self.source:

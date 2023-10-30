@@ -70,16 +70,20 @@ def PostList(request, author_id):
             return Response(serializer.data)
 
         elif request.method == 'POST':
+            print(Author.objects.filter(id=author.id).exists())
+            print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.id  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
-
             if serializer.is_valid():
+                print(serializer._validated_data)
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    except Author.DoesNotExist:
+    except Author.DoesNotExist as e:
+        
+        print(e)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
@@ -102,10 +106,12 @@ def PostDetail(request, author_id, post_id):
             elif request.method == 'POST':
                 # Handle POST requests to update a specific post
                 serializer = PostSerializer(post, data=request.data)
-                
+                request.data['author'] = author.id 
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
+                else:
+                    print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             elif request.method == 'DELETE':
@@ -120,7 +126,8 @@ def PostDetail(request, author_id, post_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     
     except Author.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        print(serializer.errors)
+    #   return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 # def list(self, request, *args, **kwargs):

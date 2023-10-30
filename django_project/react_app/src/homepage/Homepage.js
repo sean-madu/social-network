@@ -3,14 +3,15 @@ import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
 import ProfilePage from '../profilePage/Profile';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Post from '../createPost/Post';
 import Posts from '../stream/Stream';
-
+import SERVER_ADDR from '../serverAddress';
 
 
 export default function Homepage() {
-
+  const urlParams = new URLSearchParams(window.location.search);
+  const userID = urlParams.get('user');
 
 
   //We should query for the actual things here
@@ -63,8 +64,37 @@ export default function Homepage() {
     },
     // Add more posts as needed
   ];
+
+  //Props
   const [friendRequests, setFriendRequests] = useState(testFollows);
   const [activeNav, setActiveNav] = useState(0);
+  const [userPosts, setUserPosts] = useState([]);
+  const [username, setUsername] = useState("");
+
+  const fetchAuthor = () => {
+    return fetch(`${SERVER_ADDR}authors/${userID}`)
+      .then((res) => { return res.json() })
+      .then((json) => {
+        setUsername(json.displayName)
+      })
+  }
+
+  const fetchAuthorPosts = () => {
+    return fetch(`${SERVER_ADDR}authors/${userID}/posts`)
+      .then((res) => { return res.json() })
+      .then((json) => {
+
+        setUserPosts(json)
+      })
+  }
+
+  //Effects
+  //This effect runs once
+  useEffect(() => {
+
+    fetchAuthor();
+    fetchAuthorPosts();
+  }, []);
 
 
   const handleSelectActiveTab = (val) => {
@@ -152,10 +182,10 @@ export default function Homepage() {
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
           </div>
           <div className={activeNav === 3 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <Post />
+            <Post getPosts={fetchAuthorPosts} editing={false} />
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <ProfilePage />
+            <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} />
           </div>
 
         </div>
