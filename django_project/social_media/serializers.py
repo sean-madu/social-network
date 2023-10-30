@@ -28,3 +28,14 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'author'
+        return data
+    
+    def create(self, validated_data):
+        domain = self.context['request'].get_host()
+        validated_data['host'] = f"http://{domain}"
+        return super().create(validated_data)
+    
