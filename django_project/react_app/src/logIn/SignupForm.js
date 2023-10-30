@@ -39,12 +39,16 @@ export default function SignupForm() {
       })
       .then((res) => {
         if (res.ok) {
-          //Sucessfully posted
-          window.location.href = `/homepage?user=${document.getElementById("loginUsername").value}`;
+
+          return res.json();
         }
         else {
           window.location.href = window.location.href + "#failed";
         }
+      })
+      .then((json) => {
+        //Sucessfully posted
+        window.location.href = `/homepage?user=${json.id}`;
       })
   }
 
