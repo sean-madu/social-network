@@ -159,7 +159,7 @@ export default function PostView(props) {
 
 
 
-    {editing && <Post content={post.content} postID={post.id} posts={props.posts} getPosts={props.getPosts} />}
+    {editing && <Post content={post.content} postID={post.id} posts={props.posts} getPosts={props.getPosts} editing={true} />}
     {showComments && getCommentSection()}
 
   </>

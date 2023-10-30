@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import SERVER_ADDR from '../serverAddress';
 //Props will only ever be there if we are editing and not posting
 export default function Post(props) {
-  let editing = Object.keys(props).length != 0;
+  let editing = props.editing;
   // State for post content, selected format, and selected image
   const [postContent, setPostContent] = useState(editing ? props.content : '');
   const [selectedOption, setSelectedOption] = useState('plain');
@@ -68,10 +68,12 @@ export default function Post(props) {
           "Content-type": "application/json; charset=UTF-8"
         }
       })
-      .then((res) => { return res.json() })
-      .then((json) => {
-        //TODO send this to all the users inboxes
-        console.log(json)
+      .then((res) => {
+
+        if (res.ok) {
+          alert("POST MADE")
+          props.getPosts()
+        }
       })
     }
 

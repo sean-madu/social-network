@@ -182,7 +182,7 @@ export default function Homepage() {
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
           </div>
           <div className={activeNav === 3 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <Post />
+            <Post getPosts={fetchAuthorPosts} editing={false} />
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} />
