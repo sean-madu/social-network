@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author
-from .serializers import PostSerializer, AuthorSerializer
+from .models import Post, Author, Comment
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer
 import bleach
 
 # FAVOUR DELETE THIS IF YOU NEED
@@ -70,8 +70,6 @@ def PostList(request, author_id):
             return Response(serializer.data)
 
         elif request.method == 'POST':
-            print(Author.objects.filter(id=author.id).exists())
-            print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.id  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
@@ -126,9 +124,34 @@ def PostDetail(request, author_id, post_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     
     except Author.DoesNotExist:
-        print(serializer.errors)
-    #   return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET', 'POST'])
+def CommentList(request, author_id, post_id):
+    try:
+        author = Author.objects.get(id=author_id)  # Retrieve the author by author_id
+        try:
+            post = Post.objects.get(id=post_id)
+            if request.method == 'GET':
+                filterStr = "http://127.0.0.1:8000/authors/" + str(author.id) + "/posts/" + str(post.id) + "/"
+                comments = Comment.objects.filter(id__startswith=filterStr)
+                serializer = CommentSerializer(comments, many=True)
+                # Sanitize HTML content in the list view
+                for post in serializer.data:
+                    post['content'] = bleach.clean(post['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                return Response(serializer.data)
+            if request.method == 'POST':
+                # Handle POST requests to create a new post associated with the author
+                request.data['author'] = author.id  # Set the author for the new post
+                serializer = CommentSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)       
+    except Author.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 # def list(self, request, *args, **kwargs):
 #         queryset = self.filter_queryset(self.get_queryset())
