@@ -189,7 +189,7 @@ export default function ProfilePage(props) {
         </div>
           {/* Posts by the User */}
           <div className='row' >
-            <Posts posts={props.userPosts} setPosts={props.setUserPosts} proxy={true} user={true} />
+            <Posts posts={props.userPosts} getPosts={props.getUserPosts} proxy={true} user={true} />
           </div>
         </div>
       </div>

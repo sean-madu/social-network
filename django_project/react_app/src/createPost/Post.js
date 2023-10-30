@@ -42,6 +42,7 @@ export default function Post(props) {
   const handlePostClick = () => {
 
     if (editing) {
+
       fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
         {
           method: "POST",
@@ -50,10 +51,11 @@ export default function Post(props) {
             "Content-type": "application/json; charset=UTF-8"
           }
         })
-        .then((res) => { return res.json() })
-        .then((json) => {
-          //TODO send this to all the users inboxes
-          console.log(json)
+        .then((res) => {
+          if (res.ok) {
+
+            props.getPosts()
+          }
         })
 
     }

@@ -11,12 +11,11 @@ interface Post {
 
 
 const Posts = (props) => {
-  const [posts, setPosts] = useState(props.posts);
   const getPosts = () => {
     return props.posts.map((post) => {
       return (
         <li key={post.id} className="list-group-item">
-          <PostView post={post} setPosts={props.setPosts} proxy={props.proxy} user={props.user} />
+          <PostView post={post} posts={props.posts} getPosts={props.getPosts} proxy={props.proxy} user={props.user} />
         </li>
       )
     }

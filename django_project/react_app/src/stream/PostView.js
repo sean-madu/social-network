@@ -50,11 +50,7 @@ export default function PostView(props) {
         //TODO Handle a failed delete
         if (res.ok) {
 
-          props.setPosts((prevPosts) => {
-            return prevPosts.filter((post) =>
-              post.id !== postId
-            )
-          });
+          props.getPosts()
 
         }
       })
@@ -163,7 +159,7 @@ export default function PostView(props) {
 
 
 
-    {editing && <Post content={post.content} postID={post.id} />}
+    {editing && <Post content={post.content} postID={post.id} posts={props.posts} getPosts={props.getPosts} />}
     {showComments && getCommentSection()}
 
   </>
