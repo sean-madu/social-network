@@ -7,6 +7,8 @@ import Post from "../createPost/Post";
 import SERVER_ADDR from "../serverAddress";
 import Comment from "./Comment";
 
+import ReactMarkdown from 'react-markdown';
+
 export default function PostView(props) {
 
 
@@ -174,7 +176,7 @@ export default function PostView(props) {
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
       <small>{username}</small>
     </div>
-    <p>{post.content}</p>
+    <ReactMarkdown>{props.post.content}</ReactMarkdown>
 
     {props.user && getUserOptions()}
 
