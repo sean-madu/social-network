@@ -13,7 +13,6 @@ export default function PostView(props) {
     return fetch(`${SERVER_ADDR}authors/${id}`)
       .then((res) => { return res.json() })
       .then((json) => {
-        console.log(json)
         setUsername(json.displayName)
       })
   }
@@ -39,13 +38,27 @@ export default function PostView(props) {
   };
 
   const handleDelete = (postId) => {
+    fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
 
-    props.setPosts((prevPosts) => {
+      .then((res) => {
+        //TODO Handle a failed delete
+        if (res.ok) {
 
-      return prevPosts.filter((post) =>
-        post.id !== postId
-      )
-    });
+          props.setPosts((prevPosts) => {
+            return prevPosts.filter((post) =>
+              post.id !== postId
+            )
+          });
+
+        }
+      })
+
   }
 
   const handleEdit = (postId) => {
@@ -120,8 +133,7 @@ export default function PostView(props) {
     )
   }
 
-  console.log(`posr`)
-  console.log(post)
+
   return <>
     <div className="d-flex align-items-center mb-2">
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>

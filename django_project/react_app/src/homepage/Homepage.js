@@ -185,7 +185,7 @@ export default function Homepage() {
             <Post />
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <ProfilePage userPosts={userPosts} username={username} notUser={false} />
+            <ProfilePage userPosts={userPosts} setUserPosts={setUserPosts} username={username} notUser={false} />
           </div>
 
         </div>
