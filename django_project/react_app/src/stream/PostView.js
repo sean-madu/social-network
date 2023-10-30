@@ -2,9 +2,10 @@
 //Proxy: Remove unnecessary features and just display the content of the post
 //User: Allow for editing the post and other things only the maker of the post can do
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Post from "../createPost/Post";
 import SERVER_ADDR from "../serverAddress";
+import Comment from "./Comment";
 
 export default function PostView(props) {
 
@@ -17,13 +18,30 @@ export default function PostView(props) {
       })
   }
 
+  const fetchComments = (author_id, post_id) => {
+    return fetch(`${SERVER_ADDR}authors/${author_id}/posts/${post_id}/comments/`)
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((json) => {
+            setComments(json)
+          })
+        }
+      })
+  }
+
   let post = props.post;
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [username, setUsername] = useState("");
+  const [comments, setComments] = useState([]);
+  const [hitSubmit, setHitSubmit] = useState(false);
+
 
   fetchAuthorDetails(post.author);
+  useEffect(() => {
+    fetchComments(post.author, post.id)
+  }, [hitSubmit]);
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -36,6 +54,8 @@ export default function PostView(props) {
       )
     );
   };
+
+
 
   const handleDelete = (postId) => {
     fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}`,
@@ -50,8 +70,6 @@ export default function PostView(props) {
         //TODO Handle a failed delete
         if (res.ok) {
 
-          props.getPosts()
-
         }
       })
 
@@ -61,6 +79,25 @@ export default function PostView(props) {
     setEditing(!editing);
   }
 
+  const handleCommentSubmit = () => {
+    fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}/comments/`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          "comment": commentContent
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+
+      .then((res) => {
+        //TODO Handle a failed delete
+        if (res.ok) {
+          setHitSubmit(!hitSubmit)
+        }
+      })
+  }
 
   const getUserOptions = () => {
     return (
@@ -85,7 +122,11 @@ export default function PostView(props) {
     )
   }
 
+
+
+
   const getCommentSection = () => {
+
     return (
       <>
         <div >
@@ -100,7 +141,7 @@ export default function PostView(props) {
                 placeholder="Write your comment here..."
 
               />
-              <button className="btn btn-primary">
+              <button onClick={() => { handleCommentSubmit() }} className="btn btn-primary">
                 SUBMIT
               </button>
             </div>
@@ -110,17 +151,15 @@ export default function PostView(props) {
           <ul class="list-group">
             <li class="list-group-item">
               <div className="row">
-                <div className="col">
-                  <div className="row">
-                    <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
-                  </div>
-                  <div className="row">
-                    PEsrons 1
-                  </div>
-                </div>
-                <div className="col">
-                  Some comment for now
-                </div>
+
+                <ul class="list-group">
+                  {comments.map((comment) => {
+                    return <li className="list-group-item"><Comment comment={comment} /></li>
+                })
+                }
+                </ul>
+
+
               </div>
             </li>
           </ul>

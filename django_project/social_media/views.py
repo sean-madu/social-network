@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author
-from .serializers import PostSerializer, AuthorSerializer
+from .models import Post, Author, Comment
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer
 import bleach
 
 # FAVOUR DELETE THIS IF YOU NEED
@@ -70,8 +70,6 @@ def PostList(request, author_id):
             return Response(serializer.data)
 
         elif request.method == 'POST':
-            print(Author.objects.filter(id=author.id).exists())
-            print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.id  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
@@ -126,8 +124,56 @@ def PostDetail(request, author_id, post_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     
     except Author.DoesNotExist:
-        print(serializer.errors)
-    #   return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET', 'POST'])
+def CommentList(request, author_id, post_id):
+    try:
+        author = Author.objects.get(id=author_id)  # Retrieve the author by author_id
+        try:
+            post = Post.objects.get(id=post_id)
+            if request.method == 'GET':
+                comments = Comment.objects.filter(author = author, post=post)
+                serializer = CommentSerializer(comments, many=True)
+                # Sanitize HTML content in the list view
+                for comment in serializer.data:
+                    comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                return Response(serializer.data)
+            if request.method == 'POST':
+                # Handle POST requests to create a new post associated with the author
+                request.data['author'] = author.id  # Set the author for the new post
+                request.data['post'] = post.id # NOTE this is incorrect, just a temp fix till we redo id's
+                serializer = CommentSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)       
+    except Author.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET', 'DELETE'])
+def CommentDetail(request, post_id, author_id, comment_id):
+    try:
+        author = Author.objects.get(pk=author_id)
+        try: 
+            post = Post.objects.get(id=post_id)
+            try:
+                comment = Comment.objects.get(id=comment_id)
+                if request.method == 'GET':
+                        serializer = CommentSerializer(comment)
+                        return Response(serializer.data)
+                elif request.method == 'DELETE':
+                        comment.delete()
+                        return Response(status=status.HTTP_204_NO_CONTENT)
+            except Comment.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except Author.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 
 # def list(self, request, *args, **kwargs):

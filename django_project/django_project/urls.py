@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CustomPostViewSet
+from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, CustomPostViewSet
 from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
@@ -24,10 +24,13 @@ urlpatterns = [
     path('', views.index, name='index'),
     path("register", views.index, name="index"),
     path("profile", views.index, name="index"),
+    path("homepage", views.index, name="index"),
     
 
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_id>/', AuthorDetail, name='author-detail'),
     path('authors/<uuid:author_id>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/', PostDetail, name='post-detail'),
+    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/', CommentList, name='comment-list'),
+    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>', CommentDetail, name='comment-detail'),
 ]

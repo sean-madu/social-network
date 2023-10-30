@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Author
+from .models import Post, Author, Comment
 from django.core.exceptions import ValidationError
 
 class PostSerializer(serializers.ModelSerializer):
@@ -39,3 +39,18 @@ class AuthorSerializer(serializers.ModelSerializer):
         validated_data['host'] = f"http://{domain}"
         return super().create(validated_data)
     
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'comment'
+        return data
+    
+    def validate_content_type(self, value):
+        allowed_content_types = ["text/markdown", "text/plain"]
+        if value not in allowed_content_types:
+            raise ValidationError("Invalid content_type")
+        return value
