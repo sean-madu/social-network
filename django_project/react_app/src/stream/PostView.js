@@ -35,12 +35,13 @@ export default function PostView(props) {
   const [commentContent, setCommentContent] = useState("");
   const [username, setUsername] = useState("");
   const [comments, setComments] = useState([]);
+  const [hitSubmit, setHitSubmit] = useState(false);
 
 
   fetchAuthorDetails(post.author);
   useEffect(() => {
     fetchComments(post.author, post.id)
-  }, []);
+  }, [hitSubmit]);
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -69,8 +70,6 @@ export default function PostView(props) {
         //TODO Handle a failed delete
         if (res.ok) {
 
-          props.getPosts()
-
         }
       })
 
@@ -80,6 +79,25 @@ export default function PostView(props) {
     setEditing(!editing);
   }
 
+  const handleCommentSubmit = () => {
+    fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}/comments/`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          "comment": commentContent
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+
+      .then((res) => {
+        //TODO Handle a failed delete
+        if (res.ok) {
+          setHitSubmit(!hitSubmit)
+        }
+      })
+  }
 
   const getUserOptions = () => {
     return (
@@ -123,7 +141,7 @@ export default function PostView(props) {
                 placeholder="Write your comment here..."
 
               />
-              <button className="btn btn-primary">
+              <button onClick={() => { handleCommentSubmit() }} className="btn btn-primary">
                 SUBMIT
               </button>
             </div>
@@ -133,10 +151,14 @@ export default function PostView(props) {
           <ul class="list-group">
             <li class="list-group-item">
               <div className="row">
-                {comments.map((comment) => {
-                  return <Comment comment={comment} />
+
+                <ul class="list-group">
+                  {comments.map((comment) => {
+                    return <li className="list-group-item"><Comment comment={comment} /></li>
                 })
                 }
+                </ul>
+
 
               </div>
             </li>
