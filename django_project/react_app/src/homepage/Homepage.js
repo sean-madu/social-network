@@ -8,7 +8,9 @@ import Post from '../createPost/Post';
 import Posts from '../stream/Stream';
 
 
+
 export default function Homepage() {
+
 
 
   //We should query for the actual things here

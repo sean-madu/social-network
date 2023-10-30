@@ -9,6 +9,13 @@ export default function PostView(props) {
 
   let post = props.post;
   const [editing, setEditing] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentContent, setCommentContent] = useState("");
+
+  const handleInputChange = (e) => {
+    setCommentContent(e.target.value);
+  };
+
   const handleHeartClick = (postId) => {
     props.setPosts(prevPosts =>
       prevPosts.map(post =>
@@ -55,6 +62,50 @@ export default function PostView(props) {
     )
   }
 
+  const getCommentSection = () => {
+    return (
+      <>
+        <div >
+          <div className="mb-3 d-flex">
+            <div className="row align-self-center">
+              <textarea
+                id='postContent'
+                value={commentContent}
+                rows={2}
+                onChange={handleInputChange}
+                className="form-control col-md-12"
+                placeholder="Write your comment here..."
+
+              />
+              <button className="btn btn-primary">
+                SUBMIT
+              </button>
+            </div>
+
+
+          </div>
+          <ul class="list-group">
+            <li class="list-group-item">
+              <div className="row">
+                <div className="col">
+                  <div className="row">
+                    <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
+                  </div>
+                  <div className="row">
+                    PEsrons 1
+                  </div>
+                </div>
+                <div className="col">
+                  Some comment for now
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </>
+    )
+  }
+
   return <>
     <div className="d-flex align-items-center mb-2">
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
@@ -64,7 +115,7 @@ export default function PostView(props) {
 
     {post.user && getUserOptions()}
 
-    {!(post.proxy === true) && <button
+    {!(post.proxy) && <><button
       className={`btn btn-link text-${post.liked ? 'danger' : 'white'}`}
       onClick={() => handleHeartClick(post.id)}
       style={{
@@ -75,10 +126,18 @@ export default function PostView(props) {
       }}
     >
       <i className={`bi bi-heart${post.liked ? '-fill' : ''}`} style={{ fontSize: '1.5rem', color: "red" }}></i>
+    </button>
+    </>
+    }
+    {(!(post.proxy) || post.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
+      <i class="bi bi-chat-square-dots"></i>
     </button>}
 
 
+
     {editing && <Post content={post.content} />}
+    {showComments && getCommentSection()}
+
   </>
 
 }

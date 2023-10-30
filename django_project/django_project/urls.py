@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path("register", views.index, name="index"),
+    path("profile", views.index, name="index"),
     
 
     path('authors/', AuthorList, name='author-list'),
