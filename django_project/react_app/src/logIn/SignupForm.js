@@ -34,29 +34,16 @@ export default function SignupForm() {
       })
       .then((res) => {
         if (res.ok) {
-<<<<<<< HEAD
-
-          return res.json();
-=======
           //Sucessfully posted
           res.json().then((json) => {
             console.log(json)
             window.location.href = `/homepage?user=${json.id}`;
           })
->>>>>>> 265307e4a8f6d94feb8bb17206ea156fa26fca4c
         }
         else {
           window.location.href = window.location.href + "#failed";
         }
       })
-<<<<<<< HEAD
-      .then((json) => {
-        //Sucessfully posted
-        window.location.href = `/homepage?user=${json.id}`;
-      })
-=======
-
->>>>>>> 265307e4a8f6d94feb8bb17206ea156fa26fca4c
   }
 
   return (
