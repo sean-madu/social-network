@@ -133,16 +133,16 @@ def CommentList(request, author_id, post_id):
         try:
             post = Post.objects.get(id=post_id)
             if request.method == 'GET':
-                filterStr = "http://127.0.0.1:8000/authors/" + str(author.id) + "/posts/" + str(post.id) + "/"
-                comments = Comment.objects.filter(id__startswith=filterStr)
+                comments = Comment.objects.filter(author = author, post=post)
                 serializer = CommentSerializer(comments, many=True)
                 # Sanitize HTML content in the list view
-                for post in serializer.data:
-                    post['content'] = bleach.clean(post['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                for comment in serializer.data:
+                    comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
                 return Response(serializer.data)
             if request.method == 'POST':
                 # Handle POST requests to create a new post associated with the author
                 request.data['author'] = author.id  # Set the author for the new post
+                request.data['post'] = post.id # NOTE this is incorrect, just a temp fix till we redo id's
                 serializer = CommentSerializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()
