@@ -1,15 +1,27 @@
 from django.db import models
 from uuid import uuid4, UUID
-
 from django.urls import reverse
 
 class Author(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    host = models.URLField()
+    host = models.URLField(editable=False)
     displayName = models.CharField(max_length=32)
-    url = models.URLField()
-    github = models.URLField()
-    profileImage = models.URLField()
+    url = models.URLField(editable=False)
+    github = models.URLField(null=True)
+    profileImage = models.URLField(null=True)
+
+    # overide save for specific fields which should be saved
+    def save(self, *args, **kwargs):
+        if 'domain' in kwargs:
+            self.host = f"http://{kwargs['domain']}"
+        
+        if not self.url:
+            self.url = self.host + reverse('author-detail', kwargs={'author_id': self.id})
+        super().save(*args, **kwargs)
+
+    # Change if required...
+    def __str__(self):
+        return self.displayName
 
 class Comment(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
