@@ -32,12 +32,7 @@ def AuthorList(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
-<<<<<<< HEAD
-        serializer = AuthorSerializer(data=request.data)
-        print(serializer)
-=======
         serializer = AuthorSerializer(data=request.data, context={'request': request})
->>>>>>> 5d0ddb1a697e911ea4167aaa6cf459637fe33ae3
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
