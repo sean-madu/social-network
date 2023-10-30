@@ -106,6 +106,8 @@ def PostDetail(request, author_id, post_id):
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
+                else:
+                    print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             elif request.method == 'DELETE':
@@ -120,7 +122,8 @@ def PostDetail(request, author_id, post_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     
     except Author.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        print(serializer.errors)
+    #   return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 # def list(self, request, *args, **kwargs):

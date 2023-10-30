@@ -10,22 +10,17 @@ export default function Post(props) {
   const [selectedOption, setSelectedOption] = useState('plain');
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const userID = urlParams.get('user');
 
 
   const createPostItem = () => {
 
     //TODO handle images
     return {
-      type: "post",
-      title: "Forgot to add titles to Posts whoops",
-      contentType: `text/${selectedOption}`,
-      source: { SERVER_ADDR },
-      origin: { SERVER_ADDR },
+      title: "Forgot",
       content: document.getElementById('postContent').textContent,
-      author: "858bbf8f-14df-47ae-b75a-842ada24e01a",
-      comments: "{}",
-      unlisted: "true",
-
+      unlisted: "False"
     }
   }
   // Handle textarea input change
@@ -46,32 +41,8 @@ export default function Post(props) {
 
   // Handle post button click
   const handlePostClick = () => {
-    /*
-    //Temp for now but we have to post default author first ig?
-    fetch(`${serverAddress}authors/`,
-      {
-        method: "POST",
-        body: JSON.stringify(
-          {
-            type: "author",
-            id: `${SERVER_ADDR}authors/9de17f29c12e8f97bcbbd34cc908f1baba40658e`,
-            displayName: "Lara Croft",
-            url: "http://127.0.0.1:5454/authors/9de17f29c12e8f97bcbbd34cc908f1baba40658e",
-            github: "http://github.com/laracroft",
-            host: `${SERVER_ADDR}`,
-            profileImage: "https://i.imgur.com/k7XVwpB.jpeg"
 
-          }
-        ),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8"
-        }
-      })
-      .then((res) => { res.json() })
-      .then((json) => { console.log(json) })
-      */
-
-    fetch(`${SERVER_ADDR}authors/858bbf8f-14df-47ae-b75a-842ada24e01a/posts/`,
+    fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
       {
         method: "POST",
         body: JSON.stringify(createPostItem()),
