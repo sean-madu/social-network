@@ -2,6 +2,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.pagination import PageNumberPagination
 from .models import Post, Author
 from .serializers import PostSerializer, AuthorSerializer
 import bleach
@@ -10,12 +11,28 @@ import bleach
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
+
+        page = request.query_params.get('page', None)
+        size = request.query_params.get('size', None)
+
+        # If size or page is not specified, default to these values
+        size = size if size else 5
+        page = page if page else 1
+
+        paginator = PageNumberPagination()
+        paginator.page_size = size
+
         authors = Author.objects.all()
+        result_page = paginator.paginate_queryset(authors, request)
+
+        if result_page is not None:
+            serializer = AuthorSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         serializer = AuthorSerializer(authors, many=True)
         return Response(serializer.data)
     
     elif request.method == 'POST':
-        serializer = AuthorSerializer(data=request.data)
+        serializer = AuthorSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
