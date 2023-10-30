@@ -10,6 +10,11 @@ export default function PostView(props) {
   let post = props.post;
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [commentContent, setCommentContent] = useState("");
+
+  const handleInputChange = (e) => {
+    setCommentContent(e.target.value);
+  };
 
   const handleHeartClick = (postId) => {
     props.setPosts(prevPosts =>
@@ -61,9 +66,40 @@ export default function PostView(props) {
     return (
       <>
         <div >
+          <div className="mb-3 d-flex">
+            <div className="row align-self-center">
+              <textarea
+                id='postContent'
+                value={commentContent}
+                rows={2}
+                onChange={handleInputChange}
+                className="form-control col-md-12"
+                placeholder="Write your comment here..."
+
+              />
+              <button className="btn btn-primary">
+                SUBMIT
+              </button>
+            </div>
+
+
+          </div>
           <ul class="list-group">
             <li class="list-group-item">
-              Some comment for now
+              <div className="row">
+                <div className="col">
+                  <div className="row">
+                    <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
+                  </div>
+                  <div className="row">
+                    PEsrons 1
+                  </div>
+                </div>
+                <div className="col">
+                  Some comment for nowslkfnskdjfnkzsjdnflkzshf;iuehfbkjefbpwuefbkejrbiuh
+                </div>
+
+              </div>
             </li>
           </ul>
         </div>
