@@ -77,7 +77,6 @@ class Post(models.Model):
 
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
-
         if not self.origin:
             self.origin = self.generate_origin_url()
         if not self.source:

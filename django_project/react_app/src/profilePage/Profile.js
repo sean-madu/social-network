@@ -1,39 +1,13 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/offcanvas';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Posts from '../stream/Stream';
+import SERVER_ADDR from '../serverAddress';
 export default function ProfilePage(props) {
 
-  // Props here will only be sent if the person we are rendering is not the current user
-  let notUser = Object.keys(props).length !== 0;
-  let username;
-  if (notUser) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const myParam = urlParams.get('profile');
-    console.log(myParam);
-  }
 
-  let testUserPosts = [
-    {
-      id: 1,
-      content: 'This is the content of post 1.',
-      liked: false,
-      author: 'Obama!',
-      proxy: !notUser,
-      user: !notUser
-    },
-    {
-      id: 2,
-      content: 'This is the content of post 2.',
-      liked: false,
-      author: 'Rando123',
-      proxy: !notUser,
-      user: !notUser
-    },
-    // Add more posts as needed
-  ];
-
+  let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
 
   // Handle image selection
@@ -165,7 +139,7 @@ export default function ProfilePage(props) {
                           <h6 class="card-subtitle mb-2 text-body-secondary">USERNAME</h6>
                         </div>
                         <div className='row justify-content-center'>
-                          animeFan420
+                          {props.username}
                         </div>
                       </div>
                     </div>
@@ -190,7 +164,7 @@ export default function ProfilePage(props) {
                       </div>
                     </div>
                     <div className='col'>
-                      <button className='btn btn-primary'> SEND A FOLLOW REQUEST</button>
+                      {notUser && <button className='btn btn-primary'> SEND A FOLLOW REQUEST</button>}
                     </div>
 
                   </div>
@@ -209,15 +183,13 @@ export default function ProfilePage(props) {
                     </div>
                   </div>
                   {!notUser && userOptions()}
-
-
                 </div>
             </div>
           </div>
         </div>
           {/* Posts by the User */}
           <div className='row' >
-            <Posts posts={testUserPosts} />
+            <Posts posts={props.userPosts} getPosts={props.getUserPosts} proxy={true} user={true} />
           </div>
         </div>
       </div>
