@@ -1,15 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SERVER_ADDR from "../serverAddress";
 
 
 export default function Comment(props) {
 
 
-  [author, setAuthor] = useState("")
-  [comment, setComment] = useState("")
+  const [author, setAuthor] = useState("")
+  const [comment, setComment] = useState("")
 
-  fetch(props.comment.author)
+  useEffect(() => {
+    fetch(`${SERVER_ADDR}authors/${props.comment.author}/`)
     .then((res) => {
       if (res.ok) {
         res.json().then(
@@ -20,16 +21,18 @@ export default function Comment(props) {
       }
     })
 
-  fetch(props.comment.id)
+    fetch(`${SERVER_ADDR}authors/${props.comment.author}/posts/${props.comment.post}/comments/${props.comment.id}`)
     .then((res) => {
       if (res.ok) {
         res.json().then(
           (json) => {
-            setAuthor(json.displayName)
+            setComment(json.comment)
           }
         )
       }
     })
+  }, []);
+
   return (
     <>
       <div className="col">
@@ -38,11 +41,11 @@ export default function Comment(props) {
         </div>
 
         <div className="row">
-          PEsrons 1
+          {author}
         </div>
       </div>
       <div className="col">
-        Some comment for now
+        {comment}
       </div>
     </>
 
