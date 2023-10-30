@@ -96,9 +96,8 @@ export default function PostView(props) {
                   </div>
                 </div>
                 <div className="col">
-                  Some comment for nowslkfnskdjfnkzsjdnflkzshf;iuehfbkjefbpwuefbkejrbiuh
+                  Some comment for now
                 </div>
-
               </div>
             </li>
           </ul>

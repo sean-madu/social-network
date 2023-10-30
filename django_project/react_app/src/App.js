@@ -17,7 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/register" element={<SignupForm />} />
-        <Route path="/defaultUser" element={<Homepage />} />
+        <Route path="/homepage" element={<Homepage />} />
         <Route path="/profile" element={<ProfilePage notUser={true} />} />
       </Routes>
     </BrowserRouter>
