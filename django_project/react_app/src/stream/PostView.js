@@ -4,13 +4,27 @@
 
 import { useState } from "react";
 import Post from "../createPost/Post";
+import SERVER_ADDR from "../serverAddress";
 
 export default function PostView(props) {
+
+
+  const fetchAuthorDetails = (id) => {
+    return fetch(`${SERVER_ADDR}authors/${id}`)
+      .then((res) => { return res.json() })
+      .then((json) => {
+        console.log(json)
+        setUsername(json.displayName)
+      })
+  }
 
   let post = props.post;
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentContent, setCommentContent] = useState("");
+  const [username, setUsername] = useState("");
+
+  fetchAuthorDetails(post.author);
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -106,16 +120,18 @@ export default function PostView(props) {
     )
   }
 
+  console.log(`posr`)
+  console.log(post)
   return <>
     <div className="d-flex align-items-center mb-2">
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
-      <small>{post.author}</small>
+      <small>{username}</small>
     </div>
     <p>{post.content}</p>
 
-    {post.user && getUserOptions()}
+    {props.user && getUserOptions()}
 
-    {!(post.proxy) && <><button
+    {!(props.proxy) && <><button
       className={`btn btn-link text-${post.liked ? 'danger' : 'white'}`}
       onClick={() => handleHeartClick(post.id)}
       style={{
@@ -129,7 +145,7 @@ export default function PostView(props) {
     </button>
     </>
     }
-    {(!(post.proxy) || post.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
+    {(!(props.proxy) || props.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
       <i class="bi bi-chat-square-dots"></i>
     </button>}
 

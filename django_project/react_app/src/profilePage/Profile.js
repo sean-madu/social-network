@@ -6,59 +6,9 @@ import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
 export default function ProfilePage(props) {
 
-  // Props here will only be sent if the person we are rendering is not the current user
-  let notUser = Object.keys(props).length !== 0;
-  const urlParams = new URLSearchParams(window.location.search);
-  const userID = urlParams.get('user');
 
-  const fetchAuthor = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}`)
-      .then((res) => { return res.json() })
-      .then((json) => {
-        console.log(json)
-        setUsername(json.displayName)
-      })
-  }
-
-  const fetchAuthorPosts = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/posts`)
-      .then((res) => { return res.json() })
-      .then((json) => {
-        console.log(json)
-      })
-  }
-
-  //This effect runs once
-  useEffect(() => {
-
-    fetchAuthor();
-    fetchAuthorPosts();
-  }, []);
-
-
-  let testUserPosts = [
-    {
-      id: 1,
-      content: 'This is the content of post 1.',
-      liked: false,
-      author: 'Obama!',
-      proxy: !notUser,
-      user: !notUser
-    },
-    {
-      id: 2,
-      content: 'This is the content of post 2.',
-      liked: false,
-      author: 'Rando123',
-      proxy: !notUser,
-      user: !notUser
-    },
-    // Add more posts as needed
-  ];
-
+  let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
-  const [username, setUsername] = useState("");
-  const [posts, setPosts] = useState([]);
 
   // Handle image selection
   const handleImageChange = (e) => {
@@ -189,7 +139,7 @@ export default function ProfilePage(props) {
                           <h6 class="card-subtitle mb-2 text-body-secondary">USERNAME</h6>
                         </div>
                         <div className='row justify-content-center'>
-                          {username}
+                          {props.username}
                         </div>
                       </div>
                     </div>
@@ -241,7 +191,7 @@ export default function ProfilePage(props) {
         </div>
           {/* Posts by the User */}
           <div className='row' >
-            <Posts posts={testUserPosts} />
+            <Posts posts={props.userPosts} proxy={true} user={true} />
           </div>
         </div>
       </div>

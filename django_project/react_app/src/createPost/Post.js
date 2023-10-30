@@ -50,8 +50,11 @@ export default function Post(props) {
           "Content-type": "application/json; charset=UTF-8"
         }
       })
-      .then((res) => { res.json() })
-      .then((json) => { console.log(json) })
+      .then((res) => { return res.json() })
+      .then((json) => {
+        //TODO send this to all the users inboxes
+        console.log(json)
+      })
   };
 
   return (
