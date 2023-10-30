@@ -9,6 +9,8 @@ export default function PostView(props) {
 
   let post = props.post;
   const [editing, setEditing] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+
   const handleHeartClick = (postId) => {
     props.setPosts(prevPosts =>
       prevPosts.map(post =>
@@ -55,6 +57,20 @@ export default function PostView(props) {
     )
   }
 
+  const getCommentSection = () => {
+    return (
+      <>
+        <div >
+          <ul class="list-group">
+            <li class="list-group-item">
+              Some comment for now
+            </li>
+          </ul>
+        </div>
+      </>
+    )
+  }
+
   return <>
     <div className="d-flex align-items-center mb-2">
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
@@ -64,7 +80,7 @@ export default function PostView(props) {
 
     {post.user && getUserOptions()}
 
-    {!(post.proxy === true) && <button
+    {!(post.proxy) && <><button
       className={`btn btn-link text-${post.liked ? 'danger' : 'white'}`}
       onClick={() => handleHeartClick(post.id)}
       style={{
@@ -75,10 +91,18 @@ export default function PostView(props) {
       }}
     >
       <i className={`bi bi-heart${post.liked ? '-fill' : ''}`} style={{ fontSize: '1.5rem', color: "red" }}></i>
+    </button>
+    </>
+    }
+    {(!(post.proxy) || post.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
+      <i class="bi bi-chat-square-dots"></i>
     </button>}
 
 
+
     {editing && <Post content={post.content} />}
+    {showComments && getCommentSection()}
+
   </>
 
 }
