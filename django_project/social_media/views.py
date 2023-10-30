@@ -152,6 +152,29 @@ def CommentList(request, author_id, post_id):
             return Response(status=status.HTTP_404_NOT_FOUND)       
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET', 'DELETE'])
+def CommentDetail(request, post_id, author_id, comment_id):
+    try:
+        author = Author.objects.get(pk=author_id)
+        try: 
+            post = Post.objects.get(id=post_id)
+            try:
+                comment = Comment.objects.get(id=comment_id)
+                if request.method == 'GET':
+                        serializer = CommentSerializer(comment)
+                        return Response(serializer.data)
+                elif request.method == 'DELETE':
+                        comment.delete()
+                        return Response(status=status.HTTP_204_NO_CONTENT)
+            except Comment.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except Author.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 
 # def list(self, request, *args, **kwargs):
 #         queryset = self.filter_queryset(self.get_queryset())

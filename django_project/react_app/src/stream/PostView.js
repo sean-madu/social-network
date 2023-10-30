@@ -17,13 +17,23 @@ export default function PostView(props) {
       })
   }
 
+  const fetchComments = (author_id, post_id) => {
+    return fetch(`${SERVER_ADDR}authors/${author_id}/post/${post_id}/comments/`)
+      .then((res) => { return res.json() })
+      .then((json) => {
+        setComments(json)
+      })
+  }
+
   let post = props.post;
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [username, setUsername] = useState("");
+  const [comments, setComments] = useState([]);
 
   fetchAuthorDetails(post.author);
+  fetchComments(post.id, post.author);
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -36,6 +46,8 @@ export default function PostView(props) {
       )
     );
   };
+
+
 
   const handleDelete = (postId) => {
     fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}`,
@@ -85,6 +97,9 @@ export default function PostView(props) {
     )
   }
 
+
+
+
   const getCommentSection = () => {
     return (
       <>
@@ -110,17 +125,36 @@ export default function PostView(props) {
           <ul class="list-group">
             <li class="list-group-item">
               <div className="row">
-                <div className="col">
-                  <div className="row">
-                    <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
+                {
+                  comments.map((comment) => {
+                    <div className="col">
+                      <div className="row">
+                        <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
+                      </div>
+
+                      <div className="row">
+                        comment.
+                      </div>
+                    </div>
+                  })
+                  /*
+                  <div className="col">
+                    <div className="row">
+                      <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
+                    </div>
+
+                    <div className="row">
+                      PEsrons 1
+                    </div>
                   </div>
-                  <div className="row">
-                    PEsrons 1
+                  <div className="col">
+                    Some comment for now
                   </div>
-                </div>
-                <div className="col">
-                  Some comment for now
-                </div>
+                  */
+
+
+                }
+
               </div>
             </li>
           </ul>
