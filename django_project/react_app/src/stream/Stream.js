@@ -12,9 +12,6 @@ interface Post {
 
 const Posts = (props) => {
   const [posts, setPosts] = useState(props.posts);
-  console.log("below are the stuff for stream")
-  console.log(posts)
-  console.log(props.posts)
   const getPosts = () => {
     return props.posts.map((post) => {
       return (

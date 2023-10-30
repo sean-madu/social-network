@@ -15,11 +15,10 @@ export default function Post(props) {
 
 
   const createPostItem = () => {
-
     //TODO handle images
     return {
       title: "Forgot",
-      content: document.getElementById('postContent').textContent,
+      content: postContent,
       unlisted: "False"
     }
   }
@@ -42,6 +41,23 @@ export default function Post(props) {
   // Handle post button click
   const handlePostClick = () => {
 
+    if (editing) {
+      fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+        {
+          method: "POST",
+          body: JSON.stringify(createPostItem()),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8"
+          }
+        })
+        .then((res) => { return res.json() })
+        .then((json) => {
+          //TODO send this to all the users inboxes
+          console.log(json)
+        })
+
+    }
+    else {
     fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
       {
         method: "POST",
@@ -55,6 +71,8 @@ export default function Post(props) {
         //TODO send this to all the users inboxes
         console.log(json)
       })
+    }
+
   };
 
   return (

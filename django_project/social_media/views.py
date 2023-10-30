@@ -106,7 +106,7 @@ def PostDetail(request, author_id, post_id):
             elif request.method == 'POST':
                 # Handle POST requests to update a specific post
                 serializer = PostSerializer(post, data=request.data)
-                
+                request.data['author'] = author.id 
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
