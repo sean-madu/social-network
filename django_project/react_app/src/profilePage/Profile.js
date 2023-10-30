@@ -9,6 +9,9 @@ export default function ProfilePage(props) {
 
   let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
+  const urlParams = new URLSearchParams(window.location.search);
+  const userID = urlParams.get('user');
+
 
   // Handle image selection
   const handleImageChange = (e) => {
@@ -24,6 +27,30 @@ export default function ProfilePage(props) {
   }
 
 
+  const handleProfileSubmit = (e) => {
+    e.preventDefault()
+    fetch(`${SERVER_ADDR}authors/${userID}/`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          displayName: document.getElementById('profile-username-input').value
+
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+      .then((res) => {
+        if (res.ok) {
+          props.getAuthor()
+          alert("Profile updated!")
+
+        }
+      })
+
+
+  }
+
   let editProfileDiv = () => {
     return (
       <>
@@ -32,7 +59,7 @@ export default function ProfilePage(props) {
           <form className='p-5'>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Username</label>
-              <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com" />
+              <input type="" class="form-control" id="profile-username-input" placeholder="enter new username..." />
             </div>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Password</label>
@@ -64,7 +91,7 @@ export default function ProfilePage(props) {
               </div>
             )}
 
-            <button class="btn btn-primary mb-5">SUBMIT</button>
+            <button onClick={(e) => handleProfileSubmit(e)} class="btn btn-primary mb-5">SUBMIT</button>
 
 
           </form>
