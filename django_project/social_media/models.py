@@ -58,8 +58,6 @@ class Post(models.Model):
         url = current_host + reverse('post-detail', kwargs={'author_id': author_id, 'post_id': str(self.id)})
         return url
 
-    
-
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.origin:

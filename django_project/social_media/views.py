@@ -7,28 +7,20 @@ from .models import Post, Author, Comment
 from .serializers import PostSerializer, AuthorSerializer, CommentSerializer
 import bleach
 
-# FAVOUR DELETE THIS IF YOU NEED
+
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
-
-        page = request.query_params.get('page', None)
-        size = request.query_params.get('size', None)
-
-        # If size or page is not specified, default to these values
-        size = size if size else 5
-        page = page if page else 1
-
+        # use default paginator set in settings
         paginator = PageNumberPagination()
-        paginator.page_size = size
-
-        authors = Author.objects.all()
+        authors = Author.objects.all().order_by('id') # 
         result_page = paginator.paginate_queryset(authors, request)
 
-        if result_page is not None:
+        if result_page:
             serializer = AuthorSerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
-        serializer = AuthorSerializer(authors, many=True)
+        # If somehow pagination doesn't occur, return the whole list anyways
+        serializer = AuthorSerializer(authors, many=True) 
         return Response(serializer.data)
     
     elif request.method == 'POST':
@@ -181,53 +173,6 @@ def CommentDetail(request, post_id, author_id, comment_id):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
-
-# def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         serializer = self.get_serializer(queryset, many=True)
-
-#         # Sanitize HTML content in the list view
-#         for post in serializer.data:
-#             post['content'] = bleach.clean(post['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
-
-#         return Response(serializer.data)
-
-
-#     def retrieve(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         serializer = self.get_serializer(instance)
-
-#         # Sanitize HTML content in the detail view
-#         serializer.data['content'] = bleach.clean(serializer.data['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
-
-#         return Response(serializer.data)
-
- # custom logic is required because for some reason PUT and POST are reversed...
-    # def create(self, request, *args, **kwargs):
-    #     # Check if a post with the given ID already exists
-    #     post_id = request.data.get('id')
-    #     existing_post = Post.objects.filter(id=post_id).first()
-        
-    #     if existing_post:
-    #         # Use the update method to update an existing post
-    #         serializer = self.get_serializer(existing_post, data=request.data, partial=True)
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             return Response(serializer.data, status=200)
-    #         return Response(serializer.errors, status=400)
-    #     else:
-    #         # Use the default create method to create a new post
-    #         serializer = self.get_serializer(data=request.data)
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             return Response(serializer.data, status=201)
-    #         return Response(serializer.errors, status=400)
-
-# def update(self, request, *args, **kwargs):
-    #     # In this scenario, update should not be used directly
-    #     # Instead, use the create method for creating or updating a post
-    #     return Response({"detail": "Use POST to update or create a post."}, status=405)
 
 class CustomPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
