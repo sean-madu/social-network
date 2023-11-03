@@ -1,6 +1,15 @@
-//These can have multiple options for dynamic rendering
-//Proxy: Remove unnecessary features and just display the content of the post
-//User: Allow for editing the post and other things only the maker of the post can do
+/**
+ * Component to view a post, This should be ideally used in a Stream as a collection of posts
+ * props {
+ *  proxy: a boolean to remove unnecessary features and just display the content of the post
+ *  user: a boolean to Allow for editing the post and other things only the maker of the post can do
+ *  post: JSON object of the post to show
+ *  setPosts: function to tell parent component to set posts state (useful for when we do something to change a post like liking it)
+ *  getPosts: function to tell parent component to refresh posts
+ * }
+ */
+
+
 
 import { useState, useEffect } from "react";
 import Post from "../createPost/Post";

@@ -1,4 +1,10 @@
-
+/** This component displays the comments on a post
+ * 
+ * props {
+ *  comment: JSON object of the comment
+ *   
+ * }
+ */
 import { useState, useEffect } from "react";
 import SERVER_ADDR from "../serverAddress";
 
