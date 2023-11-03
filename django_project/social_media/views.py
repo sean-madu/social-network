@@ -13,7 +13,7 @@ def AuthorList(request):
     if request.method == 'GET':
         # use default paginator set in settings
         paginator = PageNumberPagination()
-        authors = Author.objects.all().order_by('id') # 
+        authors = Author.objects.all().order_by('id') # Need to be ordered to be paginated...
         result_page = paginator.paginate_queryset(authors, request)
 
         if result_page:

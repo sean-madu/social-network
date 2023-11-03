@@ -1,8 +1,11 @@
 from django.db import models
-from uuid import uuid4, UUID
+from uuid import uuid4
+from django.contrib.auth.models import User
 from django.urls import reverse
 
 class Author(models.Model):
+    # UNCOMMENT THIS WHEN FRONT END IS READY TO IMPLEMENT
+    # user = models.OneToOneField(User, on_delete=models.CASCADE) 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     host = models.URLField(editable=False)
     displayName = models.CharField(max_length=32)
