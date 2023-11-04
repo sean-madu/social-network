@@ -1,3 +1,12 @@
+/*Profile homepage of user
+props {
+  notUser : bool to know if the person viewing this component is the currentUser
+  getAuthor: Function to tell parent component to refresh authour
+  username: String for the username of the profile person
+  userPosts: The posts of the user 
+  getUserPosts: Function to tell prent to refresh page with updated user posts 
+}
+ */
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/offcanvas';
@@ -20,6 +29,7 @@ export default function ProfilePage(props) {
   };
 
   let profilePicDim = "150"
+  //TODO fetch the actual profile, if no profile then display this
   let getProfilePic = () => {
     return <svg xmlns="http://www.w3.org/2000/svg" width={profilePicDim} height={profilePicDim} fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
       <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
@@ -209,6 +219,7 @@ export default function ProfilePage(props) {
 
                     </div>
                   </div>
+                  {/** Only allow editing when the viewer is the user */}
                   {!notUser && userOptions()}
                 </div>
             </div>

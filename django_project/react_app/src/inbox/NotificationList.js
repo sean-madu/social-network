@@ -1,3 +1,9 @@
+/*
+React component for showing notifications that are not friend requests
+props{
+  comments: List of JSON objects of notifications (TODO rename this, this is a terrible name)
+}
+*/
 import 'bootstrap/dist/css/bootstrap.css';
 import PostView from '../stream/PostView';
 

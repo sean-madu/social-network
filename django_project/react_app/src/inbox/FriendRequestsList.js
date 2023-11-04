@@ -1,3 +1,10 @@
+/*
+The react component to show friend requests
+props{
+  requests: List of JSON objects of friend requests
+  setRequests: Fuction that sets the props of the parent component
+}
+*/
 import 'bootstrap/dist/css/bootstrap.css';
 import { useState } from 'react';
 
@@ -7,7 +14,9 @@ export default function FriendRequestsList(props) {
 
   let requests = props.friendRequests
   let setRequests = props.setRequests
-  //todo actually send stuff to the db
+
+
+  //TODO actually send stuff to the db
   //TODO add react transitions to these
   const handleReject = (id) => {
     const remainingRequests = requests.filter((request) => id !== request.id);
@@ -21,6 +30,7 @@ export default function FriendRequestsList(props) {
 
   }
 
+  //Map friend requests to react components for the UI
   const makeListItems = () => {
     return requests.map((item) => {
 

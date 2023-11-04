@@ -1,12 +1,25 @@
-import { useState } from 'react';
-import PostView from './PostView';
 /*
+Stream of post content 
+
 interface Post {
   id: number;
   content: string;
   liked: boolean;
   author: string;
-}*/
+}
+
+props{
+  posts: List of Json posts
+  getPosts: function to tell parent component to refresh posts
+  proxy: boolean to know if this is a proxy list
+  user: boolean to know if this stream is showing user posts
+}
+
+
+*/
+import { useState } from 'react';
+import PostView from './PostView';
+
 
 
 
