@@ -38,13 +38,20 @@ urlpatterns = [
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
     
-
+    # Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_id>/', AuthorDetail, name='author-detail'),
+    # Posts
     path('authors/<uuid:author_id>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/', PostDetail, name='post-detail'),
+    # Comments
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/', CommentList, name='comment-list'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>', CommentDetail, name='comment-detail'),
 
+    # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+
+    # Auth
+    path('auth/', include('social_media.urls')),
+
 ]

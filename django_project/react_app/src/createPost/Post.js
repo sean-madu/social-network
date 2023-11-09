@@ -1,8 +1,21 @@
+/*
+ React component for creating/editing posts
+
+ Props
+ {
+  editing: Bool for if this is meant to edit or make a new post
+  content: String containing the default content to be displayed
+  TODO image: file to display the default image
+  postID: String for ID of post if editing a post
+  getPosts: Some function telling the parent to refresh posts
+
+ }
+*/
+
 import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import SERVER_ADDR from '../serverAddress';
-//Props will only ever be there if we are editing and not posting
 export default function Post(props) {
   let editing = props.editing;
   // State for post content, selected format, and selected image

@@ -1,3 +1,5 @@
+from django.test import TestCase
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -130,3 +132,84 @@ class PostTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
  
+class LocalAuthTestsCase(TestCase):
+    def setUp(self):
+        """
+        Set up a testuser to test auth
+        """
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+
+    def tearDown(self):
+        # Delete the user created in setup
+        self.user.delete()
+
+    def test_successful_login(self):
+        """
+        Expect that logging into an account works
+        """
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # Assert that the user is authenticated or a success message is returned
+
+    def test_failed_login_invalid_credentials(self):
+        """
+        Expect that wrong credentials will fail login
+        """
+        response = self.client.post('/auth/login/', {'username': 'nonexistent_user', 'password': 'invalid_password'})
+        self.assertEqual(response.status_code, 401)
+        # Assert an error message or an indication of authentication failure is returned
+
+    def test_successful_token_verification(self):
+        """
+        Expect that we can recieve and verify the token returned by logging in.
+        """
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data
+        
+        access_token = tokens.get('access')
+
+        # Verify the token using POST request to the /token-verify/ endpoint
+        verify_response = self.client.post('/auth/token-verify/', {'token': access_token})  # Assuming the token should be sent as 'token' in the body
+        self.assertEqual(verify_response.status_code, 200)
+        # Assert to ensure a successful token verification
+
+    def test_failed_token_verification(self):
+        """
+        Expect that an invalid token will not be validated by the token-verify endpoint
+        """
+        # Since we are using a bad token anyways no need to login
+        # Simulate an expired or invalid token
+        invalid_token = "InvalidTokenString"  # Replace with an invalid or expired token
+
+        # Verify the token using POST request to the /token-verify/ endpoint
+        verify_response = self.client.post('/auth/token-verify/', {'token': invalid_token})  # Assuming the token should be sent as 'token' in the body
+        self.assertEqual(verify_response.status_code, 401)  # Adjust status code based on your authentication failure response
+        # Assert to confirm unsuccessful token verification
+    
+    def test_access_with_valid_token(self):
+        """
+        Expect that with a valid token the client can access the site contents
+        """
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data  # Assuming the tokens are returned in the response data
+
+        access_token = tokens.get('access')
+        # Access the /author/ endpoint with a valid token in the Authorization header
+        author_response = self.client.get('/authors/', HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        self.assertEqual(author_response.status_code, 200)
+        # Add assertions to ensure successful content access
+
+    def test_access_without_token(self):
+        """
+        Expect that providing the wrong token, or not providing a token will not allow the client to see content
+        """
+        # Access the /author/ endpoint without providing the Authorization header
+        author_response = self.client.get('/authors/')
+        self.assertEqual(author_response.status_code, 401)  # or the appropriate status code for authentication failure
+        # Add assertions to confirm unsuccessful content access due to lack of authentication

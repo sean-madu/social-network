@@ -1,4 +1,6 @@
-
+/*
+Homepage of an individual user
+*/
 import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
@@ -66,7 +68,7 @@ export default function Homepage() {
   ];
 
   //Props
-  const [friendRequests, setFriendRequests] = useState(testFollows);
+  const [friendRequests, setFriendRequests] = useState(testFollows); //TODO hook this up with the database
   const [activeNav, setActiveNav] = useState(0);
   const [userPosts, setUserPosts] = useState([]);
   const [username, setUsername] = useState("");
@@ -89,9 +91,7 @@ export default function Homepage() {
   }
 
   //Effects
-  //This effect runs once
   useEffect(() => {
-
     fetchAuthor();
     fetchAuthorPosts();
   }, []);
