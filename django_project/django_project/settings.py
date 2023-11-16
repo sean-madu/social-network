@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+import django_on_heroku # top of the file
 
 from datetime import timedelta
 from pathlib import Path
@@ -190,3 +191,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:3000"
 ]
+
+django_on_heroku.settings(locals()) # bottom of the file
