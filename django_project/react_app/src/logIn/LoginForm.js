@@ -2,6 +2,7 @@ import "./LoginForm.css"
 import { Link } from "react-router-dom";
 import SERVER_ADDR from "../serverAddress";
 import { useState } from "react";
+import getCookie from "../getCookies";
 export default function LoginForm() {
 
   let [error, setError] = useState(false)
@@ -35,7 +36,9 @@ export default function LoginForm() {
           res.json().then((json) => {
             console.log(json)
             //Save cookies
-            document.cookie = `access=${json.access}; refresh=${json.refresh}`
+            document.cookie = `access=${json.access};`
+            document.cookie = `refresh=${json.refresh};`
+            window.location.href = "homepage/"
           })
         }
         else {
