@@ -1,17 +1,48 @@
 import "./LoginForm.css"
 import { Link } from "react-router-dom";
+import SERVER_ADDR from "../serverAddress";
+import { useState } from "react";
 export default function LoginForm() {
 
-  //TODO the form tag work with django, fill in the action and method part of form
-  let fragments = window.location.hash;
-  console.log(fragments);
+  let [error, setError] = useState(false)
+
   //If not found then display a warning
   const getWarning = () => {
-    return fragments.length != 0 && <div class="alert alert-danger" role="alert">
+    return <div class="alert alert-danger" role="alert">
       Combination of Username and Password not found! If you have not made an account consider <Link to="/register" class="alert-link" > making one here </Link>
     </div>
   }
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    fetch(`${SERVER_ADDR}auth/login/`,
+      {
+        method: "POST",
+        body: JSON.stringify(
+          {
+            username: `${document.getElementById("loginUsername").value}`,
+            password: `${document.getElementById("loginPassword").value}`,
+
+          }
+        ),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+      .then((res) => {
+        if (res.ok) {
+          //Sucessfully posted
+          res.json().then((json) => {
+            console.log(json)
+            //window.location.href = `/homepage?user=${json.id}`;
+          })
+        }
+        else {
+          setError(true)
+          res.json().then((json) => { console.log(json) })
+        }
+      })
+  }
 
   return (
     <div style={{ display: "flex", height: "70vh", justifyContent: "center", alignItems: "center" }}>
@@ -23,7 +54,7 @@ export default function LoginForm() {
               LOG INTO THE SOCIAL NETWORK
 
             </h1>
-            {getWarning()}
+            {error && getWarning()}
           </div>
         </div>
 
@@ -39,7 +70,7 @@ export default function LoginForm() {
               <label for="loginPassword" class="form-label" >Password</label>
             </div>
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary">LOG IN</button>
+              <button onClick={(e) => { handleSubmit(e) }} class="btn btn-primary">LOG IN</button>
               <Link to="/register" class="btn btn-secondary" > OR SIGN UP </Link>
               <Link to="/defaultUser" > Place holder till user backend is finished</Link>
 
