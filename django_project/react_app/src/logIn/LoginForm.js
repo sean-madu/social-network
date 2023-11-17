@@ -34,7 +34,8 @@ export default function LoginForm() {
           //Sucessfully posted
           res.json().then((json) => {
             console.log(json)
-            //window.location.href = `/homepage?user=${json.id}`;
+            //Save cookies
+            document.cookie = `access=${json.access}; refresh=${json.refresh}`
           })
         }
         else {
