@@ -15,6 +15,7 @@ Authors:
 * Favour Nwachuwku
 * Mohammed Hussain
 * Shahmeer Ali
+* Shreya Pekhale
 
 Generally everything is LICENSE'D under the unlicense license.
 
