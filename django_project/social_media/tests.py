@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .models import Author, Post
+from .models import Author, Post, Like, Comment
 from .serializers import PostSerializer
 # Create your tests here.
 class AuthorTestCase(APITestCase):
@@ -81,6 +81,20 @@ class PostTestCase(APITestCase):
     def setUp(self):
         self.author1 = Author.objects.create(displayName="Author1")
         self.post1 = Post.objects.create(author=self.author1, title="Post1", content="Content1", unlisted=True)
+        # Create test user
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data  # Assuming the tokens are returned in the response data
+
+        self.access_token = tokens.get('access')
+
+    def tearDown(self):
+        # Delete the user created in setup
+        self.user.delete()
 
     def test_post_post_works(self):
         """
@@ -173,7 +187,7 @@ class LocalAuthTestsCase(TestCase):
         access_token = tokens.get('access')
 
         # Verify the token using POST request to the /token-verify/ endpoint
-        verify_response = self.client.post('/auth/token-verify/', {'token': access_token})  # Assuming the token should be sent as 'token' in the body
+        verify_response = self.client.post('/auth/token-verify/', {'token': access_token})
         self.assertEqual(verify_response.status_code, 200)
         # Assert to ensure a successful token verification
 
@@ -186,9 +200,8 @@ class LocalAuthTestsCase(TestCase):
         invalid_token = "InvalidTokenString"  # Replace with an invalid or expired token
 
         # Verify the token using POST request to the /token-verify/ endpoint
-        verify_response = self.client.post('/auth/token-verify/', {'token': invalid_token})  # Assuming the token should be sent as 'token' in the body
-        self.assertEqual(verify_response.status_code, 401)  # Adjust status code based on your authentication failure response
-        # Assert to confirm unsuccessful token verification
+        verify_response = self.client.post('/auth/token-verify/', {'token': invalid_token})
+        self.assertEqual(verify_response.status_code, 401)
     
     def test_access_with_valid_token(self):
         """
@@ -197,13 +210,13 @@ class LocalAuthTestsCase(TestCase):
         # Simulate a successful login to get the tokens
         response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
         self.assertEqual(response.status_code, 200)
-        tokens = response.data  # Assuming the tokens are returned in the response data
+        tokens = response.data
 
         access_token = tokens.get('access')
         # Access the /author/ endpoint with a valid token in the Authorization header
         author_response = self.client.get('/authors/', HTTP_AUTHORIZATION=f'Bearer {access_token}')
         self.assertEqual(author_response.status_code, 200)
-        # Add assertions to ensure successful content access
+        
 
     def test_access_without_token(self):
         """
@@ -213,3 +226,56 @@ class LocalAuthTestsCase(TestCase):
         author_response = self.client.get('/authors/')
         self.assertEqual(author_response.status_code, 401)  # or the appropriate status code for authentication failure
         # Add assertions to confirm unsuccessful content access due to lack of authentication
+
+class LikesForLikesTestCase(APITestCase):
+    def setUp(self):
+        self.author = Author.objects.create(displayName="Test Author")
+        self.post = Post.objects.create(author=self.author, title="Test Post", content="Test Content", unlisted=False)
+        # Create test user
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data
+
+        self.access_token = tokens.get('access')
+
+        #  # Verify the token using POST request to the /token-verify/ endpoint
+        # verify_response = self.client.post('/auth/token-verify/', {'token': self.access_token})
+        # self.assertEqual(verify_response.status_code, 200)
+
+    def tearDown(self):
+        # Delete the user created in setup
+        self.user.delete()
+
+    def test_get_likes_on_post(self):
+        """
+        Ensure we can retrieve likes on a specific post.
+        """
+        # Create likes for the post
+        Like.objects.create(author=self.author, post=self.post)
+        Like.objects.create(author=self.author, post=self.post)
+
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
+
+    def test_get_likes_on_comment(self):
+        """
+        Ensure we can retrieve likes on a specific comment of a post.
+        """
+        comment = Comment.objects.create(author=self.author, post=self.post, comment="testcomment")
+
+        # Create likes for the comment
+        Like.objects.create(author=self.author, post=self.post, comment=comment)
+        Like.objects.create(author=self.author, post=self.post, comment=comment)
+
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id, 'comment_id': comment.id})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
