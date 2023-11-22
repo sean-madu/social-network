@@ -212,15 +212,8 @@ def LikesForLikes(request, author_id, post_id, comment_id=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
-@api_view(['GET', 'POST'])
-def LikesForLiked(request, author_id, post_id):
-    
-    post = get_object_or_404(Post, id=post_id)
-    # GET request to retrieve likes on a specific post
-    if request.method == 'GET':
-        likes = Like.objects.filter(post=post)
-        serializer = LikeSerializer(likes, many=True)
-        return Response(serializer.data)
-    
-    if request.method == 'POST':
-        pass
+@api_view(['GET'])
+def LikesForLiked(request, author_id):
+    likes = Like.objects.filter(author_id=author_id)
+    serializer = LikeSerializer(likes, many=True)
+    return Response(serializer.data)
