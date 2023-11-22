@@ -178,19 +178,23 @@ def CommentDetail(request, post_id, author_id, comment_id):
 @api_view(['GET', 'POST'])
 def LikesForLikes(request, author_id, post_id, comment_id=None):
     post = get_object_or_404(Post, id=post_id)
+        
+    try:
+        # GET request to retrieve likes on a specific post or comment
+        if request.method == 'GET':
+            if comment_id:
+                # Fetch the comment associated with the given ID
+                comment = get_object_or_404(Comment, id=comment_id)
+                # Fetch likes related to the specified comment
+                likes = Like.objects.filter(comment=comment)
+            else:
+                likes = Like.objects.filter(post=post)
+            
+            serializer = LikeSerializer(likes, many=True)
+            return Response(serializer.data)
     
-    # GET request to retrieve likes on a specific post or comment
-    if request.method == 'GET':
-        if comment_id:
-            # Fetch the comment associated with the given ID
-            comment = get_object_or_404(Comment, id=comment_id)
-            # Fetch likes related to the specified comment
-            likes = Like.objects.filter(comment=comment)
-        else:
-            likes = Like.objects.filter(post=post)
-    
-        serializer = LikeSerializer(likes, many=True)
-        return Response(serializer.data)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     
     # POST requests for posting to likes on a post/comment
     if request.method == 'POST':

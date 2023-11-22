@@ -1,3 +1,4 @@
+from uuid import uuid4
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -242,10 +243,6 @@ class LikesForLikesTestCase(APITestCase):
 
         self.access_token = tokens.get('access')
 
-        #  # Verify the token using POST request to the /token-verify/ endpoint
-        # verify_response = self.client.post('/auth/token-verify/', {'token': self.access_token})
-        # self.assertEqual(verify_response.status_code, 200)
-
     def tearDown(self):
         # Delete the user created in setup
         self.user.delete()
@@ -279,3 +276,29 @@ class LikesForLikesTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
+
+    def test_get_likes_invalid_token(self):
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        response = self.client.get(url, HTTP_AUTHORIZATION='Bearer InvalidToken123')
+        
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_likes_invalid_post(self):
+        invalid_post_id = str(uuid4())
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': invalid_post_id})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_likes_invalid_comment(self):
+        invalid_comment_id = str(uuid4())
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id, 'comment_id': invalid_comment_id})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_likes_no_auth(self):
+        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
