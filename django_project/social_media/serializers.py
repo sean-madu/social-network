@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Author, Comment
+from .models import Post, Author, Comment, Like
 from django.core.exceptions import ValidationError
 
 class PostSerializer(serializers.ModelSerializer):
@@ -54,3 +54,25 @@ class CommentSerializer(serializers.ModelSerializer):
         if value not in allowed_content_types:
             raise ValidationError("Invalid content_type")
         return value
+    
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'like'
+        data['@context'] = "https://www.w3.org/ns/activitystreams"
+        
+        # Accessing author's displayName field
+        if instance.author:
+            if instance.comment:
+                data['summary'] = f"{instance.author.displayName} liked your comment"
+            else:
+                data['summary'] = f"{instance.author.displayName} liked your post"
+        else:
+            # Handle cases where author is not present (if needed)
+            data['summary'] = "Someone liked your post"  # Placeholder text
+
+        return data

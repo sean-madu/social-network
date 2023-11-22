@@ -1,10 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author, Comment
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer
+from .models import Post, Author, Comment, Like
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer
 import bleach
 
 
@@ -174,46 +175,45 @@ def CommentDetail(request, post_id, author_id, comment_id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class CustomPostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-
-    def create(self, request, *args, **kwargs):
-        # Handle custom behavior for creating a new post with a specific ID
-        # Extract the desired ID from the request data
-        post_id = request.data.get('id')
-
-        if post_id:
-            # Check if a post with the same ID already exists
-            if self.queryset.filter(id=post_id).exists():
-                return Response({'detail': 'A post with this ID already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Create the post with the provided ID
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        # Override the update method for handling POST as an update operation
-        # Ensure the user is authenticated for updates
-        if not request.user.is_authenticated:
-            return Response({'detail': 'Authentication required for updates.'}, status=status.HTTP_403_FORBIDDEN)
-
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+@api_view(['GET', 'POST'])
+def LikesForLikes(request, author_id, post_id, comment_id=None):
+    post = get_object_or_404(Post, id=post_id)
+        
+    try:
+        # GET request to retrieve likes on a specific post or comment
+        if request.method == 'GET':
+            if comment_id:
+                # Fetch the comment associated with the given ID
+                comment = get_object_or_404(Comment, id=comment_id)
+                # Fetch likes related to the specified comment
+                likes = Like.objects.filter(comment=comment)
+            else:
+                likes = Like.objects.filter(post=post)
+            
+            serializer = LikeSerializer(likes, many=True)
+            return Response(serializer.data)
+    
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    # POST requests for posting to likes on a post/comment
+    if request.method == 'POST':
+        serializer_data = request.data.copy()  # Create a mutable copy of request.data
+        
+        if comment_id:  # If there's a comment_id in the URL, associate the like with the comment
+            serializer_data['comment'] = comment_id
+        
+        serializer = LikeSerializer(data=serializer_data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
-    # You can handle the rest of the default methods as they are
-
-    def destroy(self, request, *args, **kwargs):
-        # Custom handling for DELETE requests
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT) 
+@api_view(['GET'])
+def LikesForLiked(request, author_id):
+    likes = Like.objects.filter(author_id=author_id)
+    serializer = LikeSerializer(likes, many=True)
+    return Response(serializer.data)

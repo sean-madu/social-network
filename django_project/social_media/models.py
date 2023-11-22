@@ -2,6 +2,7 @@ from django.db import models
 from uuid import uuid4
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 class Author(models.Model):
     # UNCOMMENT THIS WHEN FRONT END IS READY TO IMPLEMENT
@@ -90,3 +91,38 @@ class Comment(models.Model):
     comment = models.TextField(max_length=255)
     published = models.DateTimeField(auto_now_add=True, editable=False)
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+class Like(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    object = models.URLField(editable=False)
+
+    def clean(self):
+        if not self.post and not self.comment:
+            raise ValidationError("A like must be associated with either a post or a comment.")
+        super().clean()
+    
+    def generate_origin_url(self):
+        current_host = self.author.host
+        author_id = self.author.id
+        url = current_host
+
+        if self.comment:  # If associated with a comment
+            url += reverse('comment-detail', kwargs={'author_id': author_id, 'post_id': str(self.post.id),'comment_id': str(self.comment.id)})
+        else:  # If associated with a post
+            url += reverse('post-detail', kwargs={'author_id': author_id, 'post_id': str(self.post.id)})
+    
+        return url
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Perform full validation before saving
+        if not self.object:
+            self.object = self.generate_origin_url()
+
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.author.displayName} liked {self.object}"
