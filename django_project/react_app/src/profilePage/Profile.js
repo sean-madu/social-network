@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
 import getCookie from '../getCookies';
+import { refreshCookies } from '../getCookies';
 
 export default function ProfilePage(props) {
 
@@ -61,11 +62,32 @@ export default function ProfilePage(props) {
         if (res.ok) {
           props.getAuthor()
           alert("Profile updated!")
+        }
+        else if (res.status == 401) {
+          //Try to refresh cookies
+          refreshCookies(() => {
+            accessCookie = getCookie("access");
+            fetch(`${SERVER_ADDR}authors/${userID}/`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  displayName: document.getElementById('profile-username-input').value
 
+                }),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              })
+              .then((res) => {
+                if (res.ok) {
+                  props.getAuthor()
+                  alert("Profile updated!")
+                }
+              })
+          })
         }
       })
-
-
   }
 
   let editProfileDiv = () => {
@@ -232,7 +254,7 @@ export default function ProfilePage(props) {
             </div>
           </div>
         </div>
-          {/* Posts by the User */ console.log(props)}
+          {/* Posts by the User */}
           <div className='row' >
             <Posts posts={props.userPosts} getPosts={props.getUserPosts} proxy={true} user={true} />
           </div>
