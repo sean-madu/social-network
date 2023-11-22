@@ -40,13 +40,13 @@ urlpatterns = [
     
     # Authors
     path('authors/', AuthorList, name='author-list'),
-    path('authors/<uuid:author_id>/', AuthorDetail, name='author-detail'),
+    path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     # Posts
-    path('authors/<uuid:author_id>/posts/', PostList, name='post-list'),
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/', PostDetail, name='post-detail'),
+    path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
     # Comments
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/', CommentList, name='comment-list'),
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>', CommentDetail, name='comment-detail'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
 
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
