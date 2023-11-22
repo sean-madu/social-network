@@ -127,14 +127,14 @@ class PostTestCase(APITestCase):
 
     def test_get_all_posts(self):
         """ We can get all posts from an author"""
-        response = self.client.get(reverse('post-list', kwargs={'author_id': self.author1.id}))
+        response = self.client.get(reverse('post-list', kwargs={'author_key': self.author1.key}))
         posts = Post.objects.filter(author=self.author1)
         serializer = PostSerializer(posts, many=True)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_invalid_author(self):
-        response = self.client.get(reverse('post-list', kwargs={'author_id': self.author1.id}) + "sdf")
+        response = self.client.get(reverse('post-list', kwargs={'author_key': self.author1.key}) + "sdf")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_invalid(self):
@@ -255,7 +255,7 @@ class LikesForLikesTestCase(APITestCase):
         Like.objects.create(author=self.author, post=self.post)
         Like.objects.create(author=self.author, post=self.post)
 
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -271,34 +271,34 @@ class LikesForLikesTestCase(APITestCase):
         Like.objects.create(author=self.author, post=self.post, comment=comment)
         Like.objects.create(author=self.author, post=self.post, comment=comment)
 
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id, 'comment_id': comment.id})
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key, 'comment_key': comment.key})
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
 
     def test_get_likes_invalid_token(self):
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
         response = self.client.get(url, HTTP_AUTHORIZATION='Bearer InvalidToken123')
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_likes_invalid_post(self):
-        invalid_post_id = str(uuid4())
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': invalid_post_id})
+        invalid_post_key = str(uuid4())
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': invalid_post_key})
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_likes_invalid_comment(self):
-        invalid_comment_id = str(uuid4())
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id, 'comment_id': invalid_comment_id})
+        invalid_comment_key = str(uuid4())
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key, 'comment_key': invalid_comment_key})
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_likes_no_auth(self):
-        url = reverse('likes-list', kwargs={'author_id': self.author.id, 'post_id': self.post.id})
+        url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

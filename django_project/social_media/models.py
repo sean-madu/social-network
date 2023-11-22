@@ -4,25 +4,33 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
+
 class Author(models.Model):
     # UNCOMMENT THIS WHEN FRONT END IS READY TO IMPLEMENT
-    # user = models.OneToOneField(User, on_delete=models.CASCADE) 
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    # user = models.OneToOneField(User, on_delete=models.CASCADE)
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.URLField(editable=False)
     host = models.URLField(editable=False)
     displayName = models.CharField(max_length=32)
     url = models.URLField(editable=False)
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
+
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.url:
-            self.url = self.host + reverse('author-detail', kwargs={'author_id': self.id})
+            self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
+        if not self.id:
+            self.id = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         super().save(*args, **kwargs)
+
 
     # Change if required...
     def __str__(self):
         return self.displayName
+
+
 
 
 class Post(models.Model):
@@ -43,7 +51,9 @@ class Post(models.Model):
     ]
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default="PUBLIC")
 
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.URLField(editable=False)
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
@@ -56,11 +66,13 @@ class Post(models.Model):
     unlisted = models.BooleanField()
     commentsSrc = models.JSONField(null=True)
 
+
     def generate_origin_url(self):
         current_host = self.author.host
-        author_id = self.author.id
-        url = current_host + reverse('post-detail', kwargs={'author_id': author_id, 'post_id': str(self.id)})
+        author_key= self.author.key
+        url = current_host + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
         return url
+
 
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
@@ -70,10 +82,14 @@ class Post(models.Model):
             self.source = self.generate_origin_url()
         if not self.comments:
             self.comments = self.generate_origin_url() + "comments"
+        if not self.id:
+            self.id = self.generate_origin_url()
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.title
+
 
 class Comment(models.Model):
     # enforce handle content types
@@ -87,16 +103,33 @@ class Comment(models.Model):
     contentType = models.CharField(max_length=255, choices=content_types, default='text/plain')
     
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE) 
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.TextField(max_length=255)
     published = models.DateTimeField(auto_now_add=True, editable=False)
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.URLField(editable=False)
+
+
+    def generate_origin_url(self):
+        current_host = self.author.host
+        author_key= self.author.key
+        post_key = self.post.key
+        url = current_host + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
+        return url
+
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.id = self.generate_origin_url()
+        super().save(*args, **kwargs)
+        
 
 class Like(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True)
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.URLField(editable=False)
     object = models.URLField(editable=False)
 
     def clean(self):
@@ -106,13 +139,13 @@ class Like(models.Model):
     
     def generate_origin_url(self):
         current_host = self.author.host
-        author_id = self.author.id
+        author_key = self.author.key
         url = current_host
 
         if self.comment:  # If associated with a comment
-            url += reverse('comment-detail', kwargs={'author_id': author_id, 'post_id': str(self.post.id),'comment_id': str(self.comment.id)})
+            url += reverse('comment-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key),'comment_key': str(self.comment.key)})
         else:  # If associated with a post
-            url += reverse('post-detail', kwargs={'author_id': author_id, 'post_id': str(self.post.id)})
+            url += reverse('post-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key)})
     
         return url
 
@@ -120,6 +153,8 @@ class Like(models.Model):
         self.full_clean()  # Perform full validation before saving
         if not self.object:
             self.object = self.generate_origin_url()
+        if not self.id:
+            self.id = self.generate_origin_url()
 
 
         super().save(*args, **kwargs)
