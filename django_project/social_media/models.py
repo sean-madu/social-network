@@ -102,7 +102,7 @@ class Comment(models.Model):
     )
     contentType = models.CharField(max_length=255, choices=content_types, default='text/plain')
     
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE) #Author that made the comment NOT author that made the post 
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     comment = models.TextField(max_length=255)
     published = models.DateTimeField(auto_now_add=True, editable=False)
@@ -112,7 +112,7 @@ class Comment(models.Model):
 
     def generate_origin_url(self):
         current_host = self.author.host
-        author_key= self.author.key
+        author_key= self.post.author.key
         post_key = self.post.key
         url = current_host + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
         return url

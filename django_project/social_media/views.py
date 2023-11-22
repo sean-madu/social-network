@@ -150,7 +150,7 @@ def CommentList(request, author_key, post_key):
         try:
             post = Post.objects.get(key=post_key)
             if request.method == 'GET':
-                comments = Comment.objects.filter(author = author, post=post)
+                comments = Comment.objects.filter(post=post)
                 serializer = CommentSerializer(comments, many=True)
                 # Sanitize HTML content in the list view
                 for comment in serializer.data:
@@ -158,8 +158,8 @@ def CommentList(request, author_key, post_key):
                 return Response(serializer.data)
             if request.method == 'POST':
 
-                # Handle POST requests to create a new post associated with the author
-                request.data['author'] = author.key  # Set the author for the new post
+                # Handle POST requests to create a new comment associated with the author
+                request.data['author'] = author.key  # Set the author for the new comment
                 request.data['post'] = post.key
                 serializer = CommentSerializer(data=request.data)
                 if serializer.is_valid():
