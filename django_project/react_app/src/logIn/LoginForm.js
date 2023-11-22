@@ -31,14 +31,28 @@ export default function LoginForm() {
         }
       })
       .then((res) => {
+
         if (res.ok) {
           //Sucessfully posted
           res.json().then((json) => {
-            console.log(json)
+            const headers = { 'Authorization': `Bearer ${json.access}` }
             //Save cookies
             document.cookie = `access=${json.access};`
             document.cookie = `refresh=${json.refresh};`
-            window.location.href = "homepage/"
+            document.cookie = `username=${document.getElementById("loginUsername").value}`
+            document.cookie = `password=${document.getElementById("loginPassword").value}`
+            fetch(`${SERVER_ADDR}user/${document.getElementById("loginUsername").value}`, { headers })
+              .then((res) => {
+                if (res.ok) {
+                  res.json().then((json) => {
+                    window.location.href = `homepage?user=${json.key}`
+                  })
+                }
+                else {
+                  alert('Could not find user, it is possible that an admin has not verified you')
+                }
+              })
+
           })
         }
         else {

@@ -13,8 +13,14 @@ import 'bootstrap/js/dist/offcanvas';
 import { useState, useEffect } from 'react';
 import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
+import getCookie from '../getCookies';
+
 export default function ProfilePage(props) {
 
+  let accessCookie = getCookie("access");
+  if (!accessCookie) {
+    alert("Accessing page without logging in, this page will not work properly, please log in first")
+  }
 
   let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
@@ -47,7 +53,8 @@ export default function ProfilePage(props) {
 
         }),
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
         }
       })
       .then((res) => {
@@ -225,7 +232,7 @@ export default function ProfilePage(props) {
             </div>
           </div>
         </div>
-          {/* Posts by the User */}
+          {/* Posts by the User */ console.log(props)}
           <div className='row' >
             <Posts posts={props.userPosts} getPosts={props.getUserPosts} proxy={true} user={true} />
           </div>

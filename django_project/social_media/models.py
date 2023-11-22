@@ -6,8 +6,7 @@ from django.core.exceptions import ValidationError
 
 
 class Author(models.Model):
-    # UNCOMMENT THIS WHEN FRONT END IS READY TO IMPLEMENT
-    # user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     id = models.URLField(editable=False)
     host = models.URLField(editable=False)

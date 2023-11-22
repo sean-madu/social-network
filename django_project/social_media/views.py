@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author, Comment, Like
+from .models import Post, Author, Comment, Like, User
 from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer
 import bleach
 
@@ -234,4 +234,12 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
 def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)
     serializer = LikeSerializer(likes, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def getAuthorFromUser(request, username):
+    user = User.objects.get(username=username)
+    author = Author.objects.get(user=user)
+    print(author)
+    serializer = AuthorSerializer(author)
     return Response(serializer.data)
