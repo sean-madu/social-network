@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, CustomPostViewSet
+from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -47,6 +47,10 @@ urlpatterns = [
     # Comments
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
+    # Likes
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
+    path('authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
 
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

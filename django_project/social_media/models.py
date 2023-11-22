@@ -2,6 +2,7 @@ from django.db import models
 from uuid import uuid4
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 
 class Author(models.Model):
@@ -113,10 +114,50 @@ class Comment(models.Model):
         current_host = self.author.host
         author_key= self.author.key
         post_key = self.post.key
-        url = current_host + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
+        url = current_host + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
         return url
 
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.id = self.generate_origin_url()
+        super().save(*args, **kwargs)
+        
+
+class Like(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True)
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.URLField(editable=False)
+    object = models.URLField(editable=False)
+
+    def clean(self):
+        if not self.post and not self.comment:
+            raise ValidationError("A like must be associated with either a post or a comment.")
+        super().clean()
+    
+    def generate_origin_url(self):
+        current_host = self.author.host
+        author_key = self.author.key
+        url = current_host
+
+        if self.comment:  # If associated with a comment
+            url += reverse('comment-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key),'comment_key': str(self.comment.key)})
+        else:  # If associated with a post
+            url += reverse('post-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key)})
+    
+        return url
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Perform full validation before saving
+        if not self.object:
+            self.object = self.generate_origin_url()
+        if not self.id:
+            self.id = self.generate_origin_url()
+
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.author.displayName} liked {self.object}"

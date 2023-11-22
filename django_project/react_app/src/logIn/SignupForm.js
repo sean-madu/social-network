@@ -24,7 +24,8 @@ export default function SignupForm() {
         method: "POST",
         body: JSON.stringify(
           {
-            displayName: `${document.getElementById("loginUsername").value}`,
+            Username: `${document.getElementById("loginUsername").value}`,
+            Password: `${document.getElementById("loginPassword").value}`,
 
           }
         ),
@@ -41,6 +42,7 @@ export default function SignupForm() {
           })
         }
         else {
+          res.json().then((json) => { console.log(json) })
           window.location.href = window.location.href + "#failed";
         }
       })
@@ -72,10 +74,6 @@ export default function SignupForm() {
 
               <input type="password" class="form-control" placeholder="username" id="loginPassword" required />
               <label for="loginPassword" class="form-label" >Password</label>
-            </div>
-            <div class="mb-3 form-floating">
-              <input type="text" id="signupName" class="form-control" placeholder="username" required />
-              <label for="signupName" class="form-label ">Name</label>
             </div>
             <div class="d-grid gap-2">
               <button onClick={(e) => { handleSubmit(e) }} class="btn btn-primary">SIGN UP</button>
