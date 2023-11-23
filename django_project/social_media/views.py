@@ -146,7 +146,7 @@ def PostDetail(request, author_key, post_key):
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
-        author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        #author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
         try:
             post = Post.objects.get(key=post_key)
             if request.method == 'GET':
@@ -159,7 +159,7 @@ def CommentList(request, author_key, post_key):
             if request.method == 'POST':
 
                 # Handle POST requests to create a new post associated with the author
-                request.data['author'] = author.key  # Set the author for the new post
+                #request.data['author'] = author.key  # Set the author for the new post # Require author in post
                 request.data['post'] = post.key
                 serializer = CommentSerializer(data=request.data)
                 if serializer.is_valid():
