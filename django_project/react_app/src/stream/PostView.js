@@ -19,6 +19,7 @@ import Comment from "./Comment";
 import ReactMarkdown from 'react-markdown';
 import { refreshCookies } from "../getCookies";
 import getCookie from "../getCookies";
+import { json } from "react-router-dom";
 
 
 export default function PostView(props) {
@@ -27,11 +28,6 @@ export default function PostView(props) {
   const fetchAuthorDetails = (id, redo = true) => {
     return fetch(`${id.slice(0, id.indexOf("/posts/"))}`, { headers })
       .then((res) => {
-        console.log(res, id, "rizz")
-        if (!redo) {
-          console.log("second try")
-
-        }
         if (res.ok) {
 
           return res.json().then((json) => {
@@ -41,10 +37,9 @@ export default function PostView(props) {
         //Assuming we are only unauthorized because of bad tokens. If we are removed as  node this will render the sme result
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            console.log("refreshed", "rizz2")
-            console.log("old head", headers)
+
             headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-            console.log("new header", headers)
+
             fetchAuthorDetails(id, false);
           })
         }
@@ -72,14 +67,15 @@ export default function PostView(props) {
         }
         else {
           //alert(`error could not get ${post_id} comments`)
-          console.log(res)
+          console.log(res, "comments failed")
+          res.json().then((json) => {
+            console.log(json)
+          })
         }
       })
   }
 
   let post = props.post;
-  console.log(post)
-  console.log(post)
   const remote = !post.id.startsWith(SERVER_ADDR)
   //TODO If remote modify the headers of the request to use basic auth instead of token,
   //TODO also change refresh headers to allow remote headers 
@@ -147,26 +143,30 @@ export default function PostView(props) {
 
   const handleCommentSubmit = (redo = true) => {
     headers["Content-type"] = "application/json; charset=UTF-8"
-    fetch(`${post.id}/comments/`,
+    fetch(`${post.id}comments/`,
       {
         method: "POST",
         body: JSON.stringify({
           "comment": commentContent,
-          "author": `${SERVER_ADDR}author/${new URLSearchParams(window.location.search).get('user')}`
+          "author": `${new URLSearchParams(window.location.search).get('user')}`
         }),
         headers
       })
 
       .then((res) => {
+        console.log("commet submit", res)
         if (res.ok) {
           setHitSubmit(!hitSubmit)
         }
-        if (res.status == 401 && redo) {
+        else if (res.status == 401 && redo) {
           refreshCookies(() => {
             headers = { 'Authorization': getCookie("access") }
             handleCommentSubmit(false)
 
           })
+        }
+        else {
+          res.json().then((json) => console.log(json))
         }
       })
     delete headers["Content-type"]

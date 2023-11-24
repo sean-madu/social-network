@@ -59,18 +59,34 @@ export default function Post(props) {
 
     if (editing) {
 
-      fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+      fetch(`${props.postID}`,
         {
           method: "POST",
           body: JSON.stringify(createPostItem()),
           headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${accessCookie}`
           }
         })
         .then((res) => {
           if (res.ok) {
 
             props.getPosts()
+          }
+          else if (res.status == 401) {
+            fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+              {
+                method: "POST",
+                body: JSON.stringify(createPostItem()),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              }).then((res) => {
+                if (res.ok) {
+                  props.getPosts()
+                }
+              })
           }
         })
 

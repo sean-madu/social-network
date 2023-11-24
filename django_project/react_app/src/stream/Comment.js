@@ -16,23 +16,28 @@ export default function Comment(props) {
   const [comment, setComment] = useState("")
   let headers;
   if (!remote) {
-    headers = { 'Authorization': getCookie("access") }
+    headers = { 'Authorization': `Bearer ${getCookie("access")}` }
   }
 
 
   useEffect(() => {
-    fetch(`${props.comment.id.split(0, "/auth")}authors/${props.comment.author}/`, { headers })
+
+    fetch(`${props.comment.id.slice(0, props.comment.id.indexOf("/auth"))}/authors/${props.comment.author}/`, { headers })
       .then((res) => {
         if (res.ok) {
+
+
           res.json().then(
             (json) => {
+              console.log("Comment json", json)
               setAuthor(json.displayName)
             }
           )
+            .catch((e) => { console.log(e) })
         }
         else if (res.status == 401) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
+            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
             fetch(`${SERVER_ADDR}authors/${props.comment.author}/`, { headers })
               .then((res) => {
                 if (res.ok) {
@@ -58,8 +63,8 @@ export default function Comment(props) {
         }
         else if (res.status == 401) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
-            fetch(`${props.comment.id}`)
+            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+            fetch(`${props.comment.id}`, { headers })
               .then((res) => {
                 if (res.ok) {
                   res.json().then(

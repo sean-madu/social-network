@@ -150,7 +150,7 @@ def CommentList(request, author_key, post_key):
         try:
             post = Post.objects.get(key=post_key)
             if request.method == 'GET':
-                comments = Comment.objects.filter(author = author, post=post)
+                comments = Comment.objects.filter( post=post)
                 serializer = CommentSerializer(comments, many=True)
                 # Sanitize HTML content in the list view
                 for comment in serializer.data:
