@@ -26,7 +26,7 @@ export default function PostView(props) {
 
   const fetchAuthorDetails = (id, redo = true) => {
 
-    return fetch(`${id}`, { headers })
+    return fetch(`${id.split(0, "/posts/")}`, { headers })
       .then((res) => {
         if (res.ok) {
           return res.json().then((json) => {
@@ -41,7 +41,7 @@ export default function PostView(props) {
           })
         }
         else {
-          alert(`error could not get ${id}`);
+          //alert(`error could not get ${id}`);
           console.log(res);
         }
       })
@@ -62,14 +62,16 @@ export default function PostView(props) {
           })
         }
         else {
-          alert(`error could not get ${post_id} comments`)
+          //alert(`error could not get ${post_id} comments`)
           console.log(res)
         }
       })
   }
 
   let post = props.post;
-  const remote = !post.startsWith(SERVER_ADDR)
+  console.log(post)
+  console.log(post)
+  const remote = !post.id.startsWith(SERVER_ADDR)
   //TODO If remote modify the headers of the request to use basic auth instead of token,
   //TODO also change refresh headers to allow remote headers 
   let headers = { 'Authorization': getCookie("access") }
