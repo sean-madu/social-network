@@ -16,7 +16,10 @@ import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import SERVER_ADDR from '../serverAddress';
+import { refreshCookies } from '../getCookies';
+import getCookie from '../getCookies';
 export default function Post(props) {
+  let accessCookie = getCookie("access")
   let editing = props.editing;
   // State for post content, selected format, and selected image
   const [postContent, setPostContent] = useState(editing ? props.content : '');
@@ -78,7 +81,8 @@ export default function Post(props) {
         method: "POST",
         body: JSON.stringify(createPostItem()),
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
         }
       })
       .then((res) => {
@@ -86,6 +90,29 @@ export default function Post(props) {
         if (res.ok) {
           alert("POST MADE")
           props.getPosts()
+        }
+        else if (res.status == 401) {
+          refreshCookies(() => {
+            accessCookie = getCookie("access")
+            fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
+              {
+                method: "POST",
+                body: JSON.stringify(createPostItem()),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              }).then((res) => {
+                if (res.ok) {
+                  alert('post made')
+                  props.getPosts()
+                }
+              })
+          })
+        }
+        else {
+          console.log(res)
+          res.json().then((json) => console.log(json))
         }
       })
     }

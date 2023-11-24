@@ -25,10 +25,15 @@ export default function PostView(props) {
 
 
   const fetchAuthorDetails = (id, redo = true) => {
-
-    return fetch(`${id.split(0, "/posts/")}`, { headers })
+    return fetch(`${id.slice(0, id.indexOf("/posts/"))}`, { headers })
       .then((res) => {
+        console.log(res, id, "rizz")
+        if (!redo) {
+          console.log("second try")
+
+        }
         if (res.ok) {
+
           return res.json().then((json) => {
             setUsername(json.displayName)
           })
@@ -36,7 +41,10 @@ export default function PostView(props) {
         //Assuming we are only unauthorized because of bad tokens. If we are removed as  node this will render the sme result
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
+            console.log("refreshed", "rizz2")
+            console.log("old head", headers)
+            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+            console.log("new header", headers)
             fetchAuthorDetails(id, false);
           })
         }
@@ -48,7 +56,8 @@ export default function PostView(props) {
   }
 
   const fetchComments = (post_id, redo = true) => {
-    return fetch(`${post_id}/comments/`, { headers })
+
+    return fetch(`${post_id}comments/`, { headers })
       .then((res) => {
         if (res.ok) {
           res.json().then((json) => {
@@ -74,7 +83,7 @@ export default function PostView(props) {
   const remote = !post.id.startsWith(SERVER_ADDR)
   //TODO If remote modify the headers of the request to use basic auth instead of token,
   //TODO also change refresh headers to allow remote headers 
-  let headers = { 'Authorization': getCookie("access") }
+  let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
 
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -118,6 +127,8 @@ export default function PostView(props) {
       .then((res) => {
         //TODO Handle a failed delete
         if (res.ok) {
+
+          props.getPosts()
 
         }
         else if (res.status == 401 && redo) {

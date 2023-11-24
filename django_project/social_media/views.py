@@ -80,7 +80,7 @@ def PostList(request, author_key):
 
         elif request.method == 'POST':
             # Handle POST requests to create a new post associated with the author
-            request.data['author'] = author.id  # Set the author for the new post
+            request.data['author'] = author.key  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
             if serializer.is_valid():
                 print(serializer._validated_data)
