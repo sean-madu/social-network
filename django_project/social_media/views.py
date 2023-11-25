@@ -249,16 +249,18 @@ def CommentList(request, author_key, post_key):
         try:
             post = Post.objects.get(key=post_key)
             if request.method == 'GET':
-                comments = Comment.objects.filter( post=post)
+                comments = Comment.objects.filter(post=post)
+
                 serializer = CommentSerializer(comments, many=True)
                 # Sanitize HTML content in the list view
                 for comment in serializer.data:
                     comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
                 return Response(serializer.data)
             if request.method == 'POST':
-
+                # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
                 # Handle POST requests to create a new post associated with the author
                 #request.data['author'] = author.key  # Set the author for the new post # Require author in post
+    
                 request.data['post'] = post.key
                 serializer = CommentSerializer(data=request.data)
                 if serializer.is_valid():
