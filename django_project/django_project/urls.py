@@ -36,9 +36,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
+    path("register/", views.index, name="index"),
     
-    # Register
-    path("register/", Register, name="register"),
     # Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
