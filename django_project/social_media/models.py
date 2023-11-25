@@ -163,3 +163,15 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.author.displayName} liked {self.object}"
 
+class FollowRequest(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    actor = models.URLField()
+    object = models.URLField()
+    # Actor wants to follow the object
+    type = models.CharField(editable=False, default="Follow", max_length=50)
+    summary = models.CharField(max_length=255) #WHY WHY WHY
+
+class Follower(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    actor = models.URLField()
+    object = models.URLField()

@@ -49,7 +49,17 @@ class CommentAdminForm(forms.ModelForm):
 class CommentAdmin(admin.ModelAdmin):
     form = CommentAdminForm
 
+class FollowAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.Follower
+        fields = '__all__'
+
+
+class FollowAdmin(admin.ModelAdmin):
+    form = FollowAdminForm
+
 admin.site.register(models.Author, AuthorAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Like, LikeAdmin)
 admin.site.register(models.Comment, CommentAdmin)
+admin.site.register(models.Follower)

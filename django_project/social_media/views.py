@@ -1,15 +1,19 @@
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author, Comment, Like, User
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer
+
+from .models import Post, Author, Comment, Like, User, Follower, FollowRequest
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer
 import bleach
+import urllib.parse
 
 
 
+BASE_URL = 'http://127.0.0.1:8000/'
 
 @api_view(['GET','POST'])
 def AuthorList(request):
@@ -238,8 +242,47 @@ def LikesForLiked(request, author_key):
 
 @api_view(['GET'])
 def getAuthorFromUser(request, username):
-    user = User.objects.get(username=username)
-    author = Author.objects.get(user=user)
-    print(author)
-    serializer = AuthorSerializer(author)
-    return Response(serializer.data)
+    try:
+        user = User.objects.get(username=username)
+        try:
+            author = Author.objects.get(user=user)
+            serializer = AuthorSerializer(author)
+            return Response(serializer.data)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def FollowerList(request, author_key):
+    if request.method == 'GET':
+        author_id = Author.objects.get(pk=author_key).id
+        follower = Follower.objects.filter(object=author_id)
+        serializer = FollowerSerializer(follower, many=True)
+        return  Response(serializer.data)
+
+@api_view(['GET', 'PUT', 'DELETE'])        
+def FollowerDetail(request, author_key, foreign_id):
+    if request.method == 'PUT':
+        serializer = FollowerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        author_id = Author.objects.get(pk=author_key).id
+        try:
+            follower = Follower.objects.get(object=author_id, actor__contains=foreign_id)
+            serializer = FollowerSerializer(follower)
+            return  Response(serializer.data)
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        author_id = Author.objects.get(pk=author_key).id
+        try:
+            follower = Follower.objects.get(object=author_id, actor__contains=foreign_id)
+            follower.delete()
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
