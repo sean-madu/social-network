@@ -16,11 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-<<<<<<< HEAD
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-=======
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, Register
->>>>>>> f9d1aabf67129b40ef81fd7202eed3e00c6d262c
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi

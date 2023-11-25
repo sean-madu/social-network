@@ -162,7 +162,6 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.displayName} liked {self.object}"
-<<<<<<< HEAD
 
 class FollowRequest(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -176,7 +175,6 @@ class Follower(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     actor = models.URLField()
     object = models.URLField()
-=======
     
 class Node(models.Model):
     remote_ip = models.CharField(primary_key=True, max_length=255)
@@ -185,4 +183,3 @@ class Node(models.Model):
     
     def __str__(self):
         return self.remote_ip
->>>>>>> f9d1aabf67129b40ef81fd7202eed3e00c6d262c
