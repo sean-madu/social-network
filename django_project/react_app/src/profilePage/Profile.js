@@ -13,8 +13,15 @@ import 'bootstrap/js/dist/offcanvas';
 import { useState, useEffect } from 'react';
 import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
+import getCookie from '../getCookies';
+import { refreshCookies } from '../getCookies';
+
 export default function ProfilePage(props) {
 
+  let accessCookie = getCookie("access");
+  if (!accessCookie) {
+    alert("Accessing page without logging in, this page will not work properly, please log in first")
+  }
 
   let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
@@ -47,18 +54,40 @@ export default function ProfilePage(props) {
 
         }),
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
         }
       })
       .then((res) => {
         if (res.ok) {
           props.getAuthor()
           alert("Profile updated!")
+        }
+        else if (res.status == 401) {
+          //Try to refresh cookies
+          refreshCookies(() => {
+            accessCookie = getCookie("access");
+            fetch(`${SERVER_ADDR}authors/${userID}/`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  displayName: document.getElementById('profile-username-input').value
 
+                }),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              })
+              .then((res) => {
+                if (res.ok) {
+                  props.getAuthor()
+                  alert("Profile updated!")
+                }
+              })
+          })
         }
       })
-
-
   }
 
   let editProfileDiv = () => {

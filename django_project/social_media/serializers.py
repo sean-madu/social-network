@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Post, Author, Comment, Like, Node
+
+from .models import Post, Author, Comment, Like, Node, FollowRequest, Follower
+
 from django.core.exceptions import ValidationError
 
 class PostSerializer(serializers.ModelSerializer):
@@ -77,7 +79,34 @@ class LikeSerializer(serializers.ModelSerializer):
 
         return data
     
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowRequest
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'follow'
+        return data
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follower
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['object'].endswith("/"):
+            data['object'] += "/"
+        if not data['actor'].endswith("/"):
+            data['actor'] += "/"
+            
+        return data
+
 class Node(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = '__all__'
+

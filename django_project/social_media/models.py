@@ -6,8 +6,7 @@ from django.core.exceptions import ValidationError
 
 
 class Author(models.Model):
-    # UNCOMMENT THIS WHEN FRONT END IS READY TO IMPLEMENT
-    # user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     id = models.URLField(editable=False)
     host = models.URLField(editable=False)
@@ -19,6 +18,8 @@ class Author(models.Model):
 
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
+        if not self.host:
+            self.host = "http://127.0.0.1:8000" #Temp fix while we wait on registering people, also not true of the wider server
         if not self.url:
             self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         if not self.id:
@@ -161,6 +162,19 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.displayName} liked {self.object}"
+
+class FollowRequest(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    actor = models.URLField()
+    object = models.URLField()
+    # Actor wants to follow the object
+    type = models.CharField(editable=False, default="Follow", max_length=50)
+    summary = models.CharField(max_length=255) #WHY WHY WHY
+
+class Follower(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    actor = models.URLField()
+    object = models.URLField()
     
 class Node(models.Model):
     remote_ip = models.CharField(primary_key=True, max_length=255)

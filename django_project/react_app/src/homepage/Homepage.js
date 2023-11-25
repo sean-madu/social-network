@@ -9,11 +9,20 @@ import { useState, useEffect } from 'react';
 import Post from '../createPost/Post';
 import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
+import getCookie from '../getCookies';
+import { refreshCookies } from '../getCookies';
 
 
 export default function Homepage() {
+  console.log(getCookie("access"))
+
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
+  let accessCookie = getCookie("access");
+  if (!accessCookie) {
+    alert("Accessing page without logging in, this page will not work properly, please log in first")
+  }
+  let headers = { 'Authorization': `Bearer ${accessCookie}` }
 
 
   //We should query for the actual things here
@@ -23,7 +32,7 @@ export default function Homepage() {
   let testNotifs = [
     {
       type: "comment", displayName: "sean", post: {
-        id: 1,
+        id: SERVER_ADDR + "author/Obama/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
         content: 'This is the content of post 1.',
         liked: false,
         author: 'Obama',
@@ -32,7 +41,7 @@ export default function Homepage() {
     },
     {
       type: "comment", displayName: "sean2", post: {
-        id: 2,
+        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfhs",
         content: 'This is the content of post 2.',
         liked: true,
         author: 'Rando123',
@@ -41,7 +50,7 @@ export default function Homepage() {
     },
     {
       type: "like", displayName: "sham1", post: {
-        id: 3,
+        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
         content: 'This is the content of post 3.',
         liked: true,
         author: 'Rando123',
@@ -53,13 +62,13 @@ export default function Homepage() {
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
   let testPosts = [
     {
-      id: 1,
+      id: SERVER_ADDR + "author/Obama!/posts/sjdfnskjdfnksjdfn/",
       content: 'This is the content of post 1.',
       liked: false,
       author: 'Obama!',
     },
     {
-      id: 2,
+      id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/",
       content: 'This is the content of post 2.',
       liked: false,
       author: 'Rando123',
@@ -74,19 +83,54 @@ export default function Homepage() {
   const [username, setUsername] = useState("");
 
   const fetchAuthor = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}`)
-      .then((res) => { return res.json() })
-      .then((json) => {
-        setUsername(json.displayName)
+    return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => setUsername(json.displayName))
+        } else {
+          if (res.status == 401)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+                  .then((res) => {
+                    if (res.ok) {
+                      return res.json().then((json) => {
+                        setUsername(json.displayName)
+                      })
+                    }
+                  })
+              }
+            )
+
+        }
       })
   }
 
   const fetchAuthorPosts = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/posts`)
-      .then((res) => { return res.json() })
-      .then((json) => {
+    return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => setUserPosts(json))
+        }
+        else {
+          if (res.status == 401)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+                  .then((res) => {
+                    if (res.ok) {
+                      return res.json().then((json) => {
+                        setUserPosts(json)
+                      })
+                    }
+                  })
+              }
+            )
 
-        setUserPosts(json)
+        }
+
       })
   }
 

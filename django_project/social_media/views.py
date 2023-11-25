@@ -1,12 +1,20 @@
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author, Comment, Like, Node
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer
+
+from .models import Post, Author, Comment, Like, User, Follower, FollowRequest, Node
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer
+
 import bleach
+import urllib.parse
+
+
+BASE_URL = 'http://127.0.0.1:8000/'
+
 
 # For authentication 
 from django.contrib.auth import authenticate, login
@@ -87,6 +95,7 @@ def Register(request):
 #     # return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 #     return 1
 @permission_classes([CustomPermission])
+
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
@@ -170,7 +179,7 @@ def PostList(request, author_key):
 
         elif request.method == 'POST':
             # Handle POST requests to create a new post associated with the author
-            request.data['author'] = author.id  # Set the author for the new post
+            request.data['author'] = author.key  # Set the author for the new post
             serializer = PostSerializer(data=request.data)
             if serializer.is_valid():
                 print(serializer._validated_data)
@@ -236,20 +245,22 @@ def PostDetail(request, author_key, post_key):
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
-        author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        #author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
         try:
             post = Post.objects.get(key=post_key)
             if request.method == 'GET':
                 comments = Comment.objects.filter(post=post)
+
                 serializer = CommentSerializer(comments, many=True)
                 # Sanitize HTML content in the list view
                 for comment in serializer.data:
                     comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
                 return Response(serializer.data)
             if request.method == 'POST':
-
-                # Handle POST requests to create a new comment associated with the author
-                request.data['author'] = author.key  # Set the author for the new comment
+                # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
+                # Handle POST requests to create a new post associated with the author
+                #request.data['author'] = author.key  # Set the author for the new post # Require author in post
+    
                 request.data['post'] = post.key
                 serializer = CommentSerializer(data=request.data)
                 if serializer.is_valid():
@@ -326,3 +337,50 @@ def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)
     serializer = LikeSerializer(likes, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def getAuthorFromUser(request, username):
+    try:
+        user = User.objects.get(username=username)
+        try:
+            author = Author.objects.get(user=user)
+            serializer = AuthorSerializer(author)
+            return Response(serializer.data)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def FollowerList(request, author_key):
+    if request.method == 'GET':
+        author_id = Author.objects.get(pk=author_key).id
+        follower = Follower.objects.filter(object=author_id)
+        serializer = FollowerSerializer(follower, many=True)
+        return  Response(serializer.data)
+
+@api_view(['GET', 'PUT', 'DELETE'])        
+def FollowerDetail(request, author_key, foreign_id):
+    if request.method == 'PUT':
+        serializer = FollowerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        author_id = Author.objects.get(pk=author_key).id
+        try:
+            follower = Follower.objects.get(object=author_id, actor__contains=foreign_id)
+            serializer = FollowerSerializer(follower)
+            return  Response(serializer.data)
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        author_id = Author.objects.get(pk=author_key).id
+        try:
+            follower = Follower.objects.get(object=author_id, actor__contains=foreign_id)
+            follower.delete()
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)

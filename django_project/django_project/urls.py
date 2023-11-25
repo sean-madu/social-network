@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, Register
+from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -41,6 +41,9 @@ urlpatterns = [
     # Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
+    path('authors/<uuid:author_key>/followers', FollowerList, name="follower-list"),
+    path('authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetail, name="follower-detail"),
+    path('user/<str:username>/', getAuthorFromUser, name="get-author"),
     # Posts
     path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
@@ -57,5 +60,6 @@ urlpatterns = [
 
     # Auth
     path('auth/', include('social_media.urls')),
+
 
 ]
