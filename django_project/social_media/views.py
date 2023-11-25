@@ -1,19 +1,104 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from .models import Post, Author, Comment, Like
+from .models import Post, Author, Comment, Like, Node
 from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer
 import bleach
 
+# For authentication 
+from django.contrib.auth import authenticate, login
+import base64
+import jwt
+from django_project.settings import SECRET_KEY
 
+# For registering a new user
+from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny
+from .permissions import CustomPermission
+# from django.views.decorators.csrf import csrf_exempt
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def Register(request):
+    if request.method == 'POST':
+        print(request.data)
+        user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
+    return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
+# # https://stackoverflow.com/questions/4581789/how-do-i-get-user-ip-address-in-django
+# def IsRemote(request):
+#     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR') # Handle proxy servers (not required but will keep in)
+#     if x_forwarded_for:
+#         ip = x_forwarded_for.split(',')[0]
+#     else:
+#         ip = request.META.get('REMOTE_ADDR') 
+#     remote_node = Node.objects.filter(remote_ip=ip) 
+#     if remote_node:
+#         return True
+#     return False
+    
+# # https://simpleisbetterthancomplex.com/tutorial/2018/12/19/how-to-use-jwt-authentication-with-django-rest-framework.html
+# def JWTAuth(request): # handle local authentication
+#     print(request.META)
+#     if 'HTTP_AUTHORIZATION' in request.META:
+#         auth = request.META['HTTP_AUTHORIZATION'].split()
+#         if len(auth) == 2:
+#             if auth[0].lower() == 'bearer':
+#                 token = auth[1]
+#                 try:
+#                     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+#                     username = payload.get('username')
+#                     user = authenticate(username=username)
+#                     if user is not None and user.is_active:
+#                         login(request, user)
+#                         request.user = user
+#                         return 0
+#                 except jwt.ExpiredSignatureError:
+#                     # refresh = RefreshToken(token)
+#                     # new_access_token = str(refresh.access_token)
+#                     # # Set the new access token in the Authorization header
+#                     # request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
+#                     # return 
+#                     # return Response({'detail': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+#                     return 1
+#                 except jwt.InvalidTokenError:
+#                     # return Response({'detail': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+#                     return 1
+#     # return Response(status=status.HTTP_401_UNAUTHORIZED)
+#     return 1
+# # https://www.djangosnippets.org/snippets/243/
+# def BasicAuth(request): # handle remote authentication
+#     if 'HTTP_AUTHORIZATION' in request.META:
+#         # if request.user: 
+#         #     return
+#         auth = request.META['HTTP_AUTHORIZATION'].split()
+#         if len(auth) == 2:
+#             if auth[0].lower() == 'basic':
+#                 username, password = base64.b64decode(auth[1]).decode('utf-8').split(':')
+#                 user = authenticate(username=username, password=password)
+#                 if user is not None:
+#                     if user.is_active:
+#                         login(request, user)
+#                         request.user = user
+#                         return 0
+#     # return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#     return 1
+@permission_classes([CustomPermission])
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
+        # if IsRemote(request) is True:
+        #     state = BasicAuth(request)
+        #     if state is 1:
+        #         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        # else:
+        #     state = JWTAuth(request)
+        #     if state is 1:
+        #         return Response({'detail': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+
         # use default paginator set in settings
         paginator = PageNumberPagination()
         authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
@@ -28,12 +113,16 @@ def AuthorList(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
+        # bool = IsRemote(request)
+        # if bool:
+        #     return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         serializer = AuthorSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-  
+
+@permission_classes([CustomPermission])  
 @api_view(['GET','POST','DELETE'])
 def AuthorDetail(request, author_key):
     try:
@@ -57,7 +146,8 @@ def AuthorDetail(request, author_key):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-  
+
+@permission_classes([CustomPermission])  
 @api_view(['GET', 'POST'])
 def PostList(request, author_key):
     try:
@@ -94,7 +184,7 @@ def PostList(request, author_key):
         print(e)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
+@permission_classes([CustomPermission])
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 def PostDetail(request, author_key, post_key):
     try:
@@ -142,7 +232,7 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
+@permission_classes([CustomPermission])
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
@@ -170,7 +260,8 @@ def CommentList(request, author_key, post_key):
             return Response(status=status.HTTP_404_NOT_FOUND)      
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-  
+
+@permission_classes([CustomPermission])  
 @api_view(['GET', 'DELETE'])
 def CommentDetail(request, post_key, author_key, comment_key):
     try:
@@ -192,7 +283,7 @@ def CommentDetail(request, post_key, author_key, comment_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
+@permission_classes([CustomPermission])
 @api_view(['GET', 'POST'])
 def LikesForLikes(request, author_key, post_key, comment_key=None):
     post = get_object_or_404(Post, key=post_key)
@@ -229,7 +320,7 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
             print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-
+@permission_classes([CustomPermission])
 @api_view(['GET'])
 def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)

@@ -49,7 +49,16 @@ class CommentAdminForm(forms.ModelForm):
 class CommentAdmin(admin.ModelAdmin):
     form = CommentAdminForm
 
+class NodeAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.Node
+        fields = '__all__'
+        
+class NodeAdmin(admin.ModelAdmin):
+    form = NodeAdminForm
+
 admin.site.register(models.Author, AuthorAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Like, LikeAdmin)
 admin.site.register(models.Comment, CommentAdmin)
+admin.site.register(models.Node, NodeAdmin)

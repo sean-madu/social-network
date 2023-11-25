@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Author, Comment, Like
+from .models import Post, Author, Comment, Like, Node
 from django.core.exceptions import ValidationError
 
 class PostSerializer(serializers.ModelSerializer):
@@ -76,3 +76,8 @@ class LikeSerializer(serializers.ModelSerializer):
             data['summary'] = "Someone liked your post"  # Placeholder text
 
         return data
+    
+class Node(serializers.ModelSerializer):
+    class Meta:
+        model = Node
+        fields = '__all__'

@@ -161,3 +161,11 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.displayName} liked {self.object}"
+    
+class Node(models.Model):
+    remote_ip = models.CharField(primary_key=True, max_length=255)
+    remote_user = models.OneToOneField(User, on_delete=models.CASCADE)
+    enabled = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.remote_ip
