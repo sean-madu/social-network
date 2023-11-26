@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
+from social_media.views import InboxView
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -44,6 +45,7 @@ urlpatterns = [
     path('authors/<uuid:author_key>/followers', FollowerList, name="follower-list"),
     path('authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetail, name="follower-detail"),
     path('user/<str:username>/', getAuthorFromUser, name="get-author"),
+    path('authors/<uuid:author_key>/inbox/', InboxView, name='inbox'),
     # Posts
     path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),

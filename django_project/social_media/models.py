@@ -183,3 +183,13 @@ class Node(models.Model):
     
     def __str__(self):
         return self.remote_ip
+
+class InboxItem(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    id = models.URLField(blank=True, null=True)
+    follow_request = models.ForeignKey(FollowRequest, blank=True, null=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=255)
+    actor = models.URLField( blank=True, null=True)
+    object = models.URLField( blank=True, null=True)
+    # like =models.URLField(blank=True, null=True)

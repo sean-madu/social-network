@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Post, Author, Comment, Like, User, Follower, FollowRequest, Node
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer
+from .models import Post, Author, Comment, Like, User, Follower, FollowRequest, Node, InboxItem
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer, InboxItemSerializer
 
 import bleach
 import urllib.parse
@@ -36,64 +36,7 @@ def Register(request):
         user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
-# # https://stackoverflow.com/questions/4581789/how-do-i-get-user-ip-address-in-django
-# def IsRemote(request):
-#     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR') # Handle proxy servers (not required but will keep in)
-#     if x_forwarded_for:
-#         ip = x_forwarded_for.split(',')[0]
-#     else:
-#         ip = request.META.get('REMOTE_ADDR') 
-#     remote_node = Node.objects.filter(remote_ip=ip) 
-#     if remote_node:
-#         return True
-#     return False
-    
-# # https://simpleisbetterthancomplex.com/tutorial/2018/12/19/how-to-use-jwt-authentication-with-django-rest-framework.html
-# def JWTAuth(request): # handle local authentication
-#     print(request.META)
-#     if 'HTTP_AUTHORIZATION' in request.META:
-#         auth = request.META['HTTP_AUTHORIZATION'].split()
-#         if len(auth) == 2:
-#             if auth[0].lower() == 'bearer':
-#                 token = auth[1]
-#                 try:
-#                     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-#                     username = payload.get('username')
-#                     user = authenticate(username=username)
-#                     if user is not None and user.is_active:
-#                         login(request, user)
-#                         request.user = user
-#                         return 0
-#                 except jwt.ExpiredSignatureError:
-#                     # refresh = RefreshToken(token)
-#                     # new_access_token = str(refresh.access_token)
-#                     # # Set the new access token in the Authorization header
-#                     # request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
-#                     # return 
-#                     # return Response({'detail': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
-#                     return 1
-#                 except jwt.InvalidTokenError:
-#                     # return Response({'detail': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-#                     return 1
-#     # return Response(status=status.HTTP_401_UNAUTHORIZED)
-#     return 1
-# # https://www.djangosnippets.org/snippets/243/
-# def BasicAuth(request): # handle remote authentication
-#     if 'HTTP_AUTHORIZATION' in request.META:
-#         # if request.user: 
-#         #     return
-#         auth = request.META['HTTP_AUTHORIZATION'].split()
-#         if len(auth) == 2:
-#             if auth[0].lower() == 'basic':
-#                 username, password = base64.b64decode(auth[1]).decode('utf-8').split(':')
-#                 user = authenticate(username=username, password=password)
-#                 if user is not None:
-#                     if user.is_active:
-#                         login(request, user)
-#                         request.user = user
-#                         return 0
-#     # return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-#     return 1
+
 @permission_classes([CustomPermission])
 
 @api_view(['GET','POST'])
@@ -384,3 +327,48 @@ def FollowerDetail(request, author_key, foreign_id):
         except Follower.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'POST', 'DELETE'])    
+def InboxView(request, author_key):
+    if request.method == 'GET':
+        try:
+            author = Author.objects.get(pk = author_key)
+            items = InboxItem.objects.filter(author=author)
+            serializer = InboxItemSerializer(items, many=True)
+            return Response(serializer.data)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'POST':
+        try:
+            author = Author.objects.get(pk = author_key)
+            data = request.data.copy()
+            data['author'] = author_key
+            if data['type'] == 'post'  or  data['type'] == 'comment' or data['type'] == 'like':
+                if not 'id' in data or len(data['id']) == 0:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            elif data['type'] == 'follow':
+                if not 'actor' in data:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                followReq = {"actor" : data['actor'], "object": author.id, "summary": "follow request from someone"}
+                serializer = FollowRequestSerializer(data=followReq)
+                if serializer.is_valid():
+                    serializer.save()
+                    data['object'] = author.id
+            else:
+                
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            serializer = InboxItemSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'DELETE':
+        try:
+            author = Author.objects.get(pk = author_key)
+            items = InboxItem.objects.filter(author=author)
+            items.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
