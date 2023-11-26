@@ -16,7 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, CustomPostViewSet
+from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
+from social_media.views import InboxView
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -34,24 +35,33 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
-    path("register", views.index, name="index"),
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
+    path("register/", views.index, name="index"),
     
     # Authors
     path('authors/', AuthorList, name='author-list'),
-    path('authors/<uuid:author_id>/', AuthorDetail, name='author-detail'),
+    path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
+    path('authors/<uuid:author_key>/followers/', FollowerList, name="follower-list"),
+    path('authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetail, name="follower-detail"),
+    path('user/<str:username>/', getAuthorFromUser, name="get-author"),
+    path('authors/<uuid:author_key>/inbox/', InboxView, name='inbox'),
     # Posts
-    path('authors/<uuid:author_id>/posts/', PostList, name='post-list'),
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/', PostDetail, name='post-detail'),
+    path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
     # Comments
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/', CommentList, name='comment-list'),
-    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>', CommentDetail, name='comment-detail'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
+    # Likes
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
+    path('authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
 
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
     # Auth
     path('auth/', include('social_media.urls')),
+
 
 ]

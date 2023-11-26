@@ -16,7 +16,10 @@ import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import SERVER_ADDR from '../serverAddress';
+import { refreshCookies } from '../getCookies';
+import getCookie from '../getCookies';
 export default function Post(props) {
+  let accessCookie = getCookie("access")
   let editing = props.editing;
   // State for post content, selected format, and selected image
   const [postContent, setPostContent] = useState(editing ? props.content : '');
@@ -51,23 +54,66 @@ export default function Post(props) {
     setSelectedImage(file);
   };
 
+  const postToInbox = (follower, post, redo = true) => {
+    fetch(`${follower.actor}inbox/`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          "id": post.id,
+          "type": "post",
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
+        }
+      })
+      .then((res) => {
+        if (res.ok) {
+
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            postToInbox(follower, false)
+          })
+        }
+        else {
+          res.json().then((j) => console.log(j, "could not post to inbox of", follower))
+        }
+      })
+  }
   // Handle post button click
   const handlePostClick = () => {
 
     if (editing) {
 
-      fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+      fetch(`${props.postID}`,
         {
           method: "POST",
           body: JSON.stringify(createPostItem()),
           headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${accessCookie}`
           }
         })
         .then((res) => {
           if (res.ok) {
 
             props.getPosts()
+          }
+          else if (res.status == 401) {
+            fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+              {
+                method: "POST",
+                body: JSON.stringify(createPostItem()),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              }).then((res) => {
+                if (res.ok) {
+                  props.getPosts()
+                }
+              })
           }
         })
 
@@ -78,16 +124,135 @@ export default function Post(props) {
         method: "POST",
         body: JSON.stringify(createPostItem()),
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
         }
       })
       .then((res) => {
 
         if (res.ok) {
-          alert("POST MADE")
-          props.getPosts()
+          res.json().then((post) => {
+            alert("Post made to followers")
+            fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              }
+            )
+              .then((res) => {
+                if (res.ok) {
+                  console.log("got followers")
+                  res.json().then((json) => {
+                    console.log(json, "followers")
+                    json.forEach((follower) => {
+                      postToInbox(follower, post)
+                    })
+                  })
+                }
+                else if (res.status == 401) {
+                  refreshCookies(() => {
+                    fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                      {
+                        headers: {
+                          'Authorization': `Bearer ${accessCookie}`
+                        }
+                      }
+                    )
+                      .then((res) => {
+                        if (res.ok) {
+                          res.json().then((json) => {
+                            json.forEach((follower) => {
+                              postToInbox(follower)
+                            })
+                          })
+                        }
+                      })
+                  }
+                  )
+                }
+                else {
+                  res.json().then((j) => console.log(j))
+                }
+              })
+          })
+
+          //props.getPosts()
+        }
+        else if (res.status == 401) {
+          refreshCookies(() => {
+            accessCookie = getCookie("access")
+            fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
+              {
+                method: "POST",
+                body: JSON.stringify(createPostItem()),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                  'Authorization': `Bearer ${accessCookie}`
+                }
+              }).then((res) => {
+                if (res.ok) {
+
+                  res.json().then((post) => {
+                    alert('post made to followers')
+                    console.log("posts like did this")
+                    fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                      {
+                        headers: {
+                          'Authorization': `Bearer ${accessCookie}`
+                        }
+                      }
+                    )
+                      .then((res) => {
+                        if (res.ok) {
+                          console.log("got followers")
+                          res.json().then((json) => {
+                            console.log(json, "followers")
+                            json.forEach((follower) => {
+                              postToInbox(follower, post)
+                            })
+                          })
+                        }
+                        else if (res.status == 401) {
+                          refreshCookies(() => {
+                            fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                              {
+                                headers: {
+                                  'Authorization': `Bearer ${accessCookie}`
+                                }
+                              }
+                            )
+                              .then((res) => {
+                                if (res.ok) {
+                                  res.json().then((json) => {
+                                    json.forEach((follower) => {
+                                      postToInbox(follower)
+                                    })
+                                  })
+                                }
+                              })
+                          }
+                          )
+                        }
+                        else {
+                          res.json().then((j) => console.log(j))
+                        }
+                      })
+                  })
+                  //props.getPosts()
+                  //Send post to all followers inbox
+
+                }
+              })
+          })
+        }
+        else {
+          console.log(res)
+          res.json().then((json) => console.log(json))
         }
       })
+
+
     }
 
   };

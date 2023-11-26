@@ -17,30 +17,70 @@ import SERVER_ADDR from "../serverAddress";
 import Comment from "./Comment";
 
 import ReactMarkdown from 'react-markdown';
+import { refreshCookies } from "../getCookies";
+import getCookie from "../getCookies";
+import { json } from "react-router-dom";
+
 
 export default function PostView(props) {
 
 
-  const fetchAuthorDetails = (id) => {
-    return fetch(`${SERVER_ADDR}authors/${id}`)
-      .then((res) => { return res.json() })
-      .then((json) => {
-        setUsername(json.displayName)
+  const fetchAuthorDetails = (id, redo = true) => {
+    return fetch(`${id.slice(0, id.indexOf("/posts/"))}`, { headers })
+      .then((res) => {
+        if (res.ok) {
+
+          return res.json().then((json) => {
+            setUsername(json.displayName)
+          })
+        }
+        //Assuming we are only unauthorized because of bad tokens. If we are removed as  node this will render the sme result
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+
+            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+
+            fetchAuthorDetails(id, false);
+          })
+        }
+        else {
+          //alert(`error could not get ${id}`);
+          console.log(res);
+        }
       })
   }
 
-  const fetchComments = (author_id, post_id) => {
-    return fetch(`${SERVER_ADDR}authors/${author_id}/posts/${post_id}/comments/`)
+  const fetchComments = (post_id, redo = true) => {
+
+    return fetch(`${post_id}comments/`, { headers })
       .then((res) => {
         if (res.ok) {
           res.json().then((json) => {
             setComments(json)
           })
         }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            headers = { 'Authorization': getCookie("access") }
+            fetchComments(post_id, false)
+          })
+        }
+        else {
+          //alert(`error could not get ${post_id} comments`)
+          console.log(res, "comments failed")
+          res.json().then((json) => {
+            console.log(json)
+          })
+        }
       })
   }
 
   let post = props.post;
+  const remote = !post.id.startsWith(SERVER_ADDR)
+  //TODO If remote modify the headers of the request to use basic auth instead of token,
+  //TODO also change refresh headers to allow remote headers 
+  let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentContent, setCommentContent] = useState("");
@@ -49,9 +89,12 @@ export default function PostView(props) {
   const [hitSubmit, setHitSubmit] = useState(false);
 
 
-  fetchAuthorDetails(post.author);
+  let authorId = post.id.slice(0, post.id.indexOf("/post/"))
+  fetchAuthorDetails(authorId);
+
+
   useEffect(() => {
-    fetchComments(post.author, post.id)
+    fetchComments(post.id)
   }, [hitSubmit]);
 
   const handleInputChange = (e) => {
@@ -68,46 +111,65 @@ export default function PostView(props) {
 
 
 
-  const handleDelete = (postId) => {
-    fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}`,
+  const handleDelete = (postId, redo = true) => {
+
+    headers["Content-type"] = "application/json; charset=UTF-8"
+    fetch(`${post.id}`,
       {
         method: "DELETE",
-        headers: {
-          "Content-type": "application/json; charset=UTF-8"
-        }
+        headers
       })
 
       .then((res) => {
         //TODO Handle a failed delete
         if (res.ok) {
 
+          props.getPosts()
+
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            headers = { 'Authorization': getCookie("access") }
+            handleDelete(postId, false)
+          })
         }
       })
-
+    delete headers["Content-type"]
   }
 
   const handleEdit = (postId) => {
     setEditing(!editing);
   }
 
-  const handleCommentSubmit = () => {
-    fetch(`${SERVER_ADDR}authors/${post.author}/posts/${post.id}/comments/`,
+  const handleCommentSubmit = (redo = true) => {
+    headers["Content-type"] = "application/json; charset=UTF-8"
+    fetch(`${post.id}comments/`,
       {
         method: "POST",
         body: JSON.stringify({
-          "comment": commentContent
+          "comment": commentContent,
+          "author": `${new URLSearchParams(window.location.search).get('user')}`
         }),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8"
-        }
+        headers
       })
 
       .then((res) => {
-        //TODO Handle a failed delete
+        console.log("commet submit", res)
         if (res.ok) {
           setHitSubmit(!hitSubmit)
         }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            headers = { 'Authorization': getCookie("access") }
+            handleCommentSubmit(false)
+
+          })
+        }
+        else {
+          res.json().then((json) => console.log(json))
+        }
       })
+    delete headers["Content-type"]
   }
 
   const getUserOptions = () => {

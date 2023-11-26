@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Post, Author, Comment
+
+from .models import Post, Author, Comment, Like, Node, FollowRequest, Follower, InboxItem
+
 from django.core.exceptions import ValidationError
 
 class PostSerializer(serializers.ModelSerializer):
@@ -54,3 +56,61 @@ class CommentSerializer(serializers.ModelSerializer):
         if value not in allowed_content_types:
             raise ValidationError("Invalid content_type")
         return value
+    
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'like'
+        data['@context'] = "https://www.w3.org/ns/activitystreams"
+        
+        # Accessing author's displayName field
+        if instance.author:
+            if instance.comment:
+                data['summary'] = f"{instance.author.displayName} liked your comment"
+            else:
+                data['summary'] = f"{instance.author.displayName} liked your post"
+        else:
+            # Handle cases where author is not present (if needed)
+            data['summary'] = "Someone liked your post"  # Placeholder text
+
+        return data
+    
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowRequest
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = 'follow'
+        return data
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follower
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['object'].endswith("/"):
+            data['object'] += "/"
+        if not data['actor'].endswith("/"):
+            data['actor'] += "/"
+            
+        return data
+
+class Node(serializers.ModelSerializer):
+    class Meta:
+        model = Node
+        fields = '__all__'
+
+class InboxItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InboxItem
+        fields = '__all__'

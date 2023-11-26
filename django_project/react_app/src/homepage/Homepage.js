@@ -4,16 +4,27 @@ Homepage of an individual user
 import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
+import AuthorList from '../search/AuthorList';
 import ProfilePage from '../profilePage/Profile';
 import { useState, useEffect } from 'react';
 import Post from '../createPost/Post';
 import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
+import getCookie from '../getCookies';
+import { refreshCookies } from '../getCookies';
+
 
 
 export default function Homepage() {
+  console.log(getCookie("access"))
+
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
+  let accessCookie = getCookie("access");
+  if (!accessCookie) {
+    alert("Accessing page without logging in, this page will not work properly, please log in first")
+  }
+  let headers = { 'Authorization': `Bearer ${accessCookie}` }
 
 
   //We should query for the actual things here
@@ -23,7 +34,7 @@ export default function Homepage() {
   let testNotifs = [
     {
       type: "comment", displayName: "sean", post: {
-        id: 1,
+        id: SERVER_ADDR + "author/Obama/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
         content: 'This is the content of post 1.',
         liked: false,
         author: 'Obama',
@@ -32,7 +43,7 @@ export default function Homepage() {
     },
     {
       type: "comment", displayName: "sean2", post: {
-        id: 2,
+        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfhs",
         content: 'This is the content of post 2.',
         liked: true,
         author: 'Rando123',
@@ -41,7 +52,7 @@ export default function Homepage() {
     },
     {
       type: "like", displayName: "sham1", post: {
-        id: 3,
+        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
         content: 'This is the content of post 3.',
         liked: true,
         author: 'Rando123',
@@ -53,13 +64,13 @@ export default function Homepage() {
   let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
   let testPosts = [
     {
-      id: 1,
+      id: SERVER_ADDR + "author/Obama!/posts/sjdfnskjdfnksjdfn/",
       content: 'This is the content of post 1.',
       liked: false,
       author: 'Obama!',
     },
     {
-      id: 2,
+      id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/",
       content: 'This is the content of post 2.',
       liked: false,
       author: 'Rando123',
@@ -68,32 +79,95 @@ export default function Homepage() {
   ];
 
   //Props
-  const [friendRequests, setFriendRequests] = useState(testFollows); //TODO hook this up with the database
+  const [friendRequests, setFriendRequests] = useState([]); //TODO hook this up with the database
   const [activeNav, setActiveNav] = useState(0);
   const [userPosts, setUserPosts] = useState([]);
   const [username, setUsername] = useState("");
 
   const fetchAuthor = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}`)
-      .then((res) => { return res.json() })
-      .then((json) => {
-        setUsername(json.displayName)
+    return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => setUsername(json.displayName))
+        } else {
+          if (res.status == 401)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+                  .then((res) => {
+                    if (res.ok) {
+                      return res.json().then((json) => {
+                        setUsername(json.displayName)
+                      })
+                    }
+                  })
+              }
+            )
+
+        }
       })
   }
 
   const fetchAuthorPosts = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/posts`)
-      .then((res) => { return res.json() })
-      .then((json) => {
+    return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => setUserPosts(json))
+        }
+        else {
+          if (res.status == 401)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+                  .then((res) => {
+                    if (res.ok) {
+                      return res.json().then((json) => {
+                        setUserPosts(json)
+                      })
+                    }
+                  })
+              }
+            )
 
-        setUserPosts(json)
+        }
+
       })
   }
 
+  const fetchFriends = (redo = true) => {
+    return fetch(`${SERVER_ADDR}authors/${userID}/inbox`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => {
+            let followRequests = []
+            json.forEach((elem) => {
+              if (elem.type == "follow")
+                followRequests.push(elem)
+
+            })
+            setFriendRequests(followRequests)
+          })
+        }
+        else {
+          if (res.status == 401 && redo)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                fetchFriends(false)
+              }
+            )
+
+        }
+
+      })
+  }
   //Effects
   useEffect(() => {
     fetchAuthor();
     fetchAuthorPosts();
+    fetchFriends();
   }, []);
 
 
@@ -158,6 +232,9 @@ export default function Homepage() {
     </svg>
   }
 
+  let searchPic = () => {
+    return <i class="bi bi-search"></i>
+  }
   //Makes the navbar content
   const renderActiveTabs = () => {
     return (
@@ -168,6 +245,7 @@ export default function Homepage() {
           {makeButton(2, friendRequestsPic, "Friend Requests", friendRequests.length)}
           {makeButton(3, createPic, "Create Post", 0)}
           {makeButton(4, navProfilePic, "Profile", 0)}
+          {makeButton(5, searchPic, "Find Friends", 0)}
 
         </div>
 
@@ -186,6 +264,9 @@ export default function Homepage() {
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} getAuthor={fetchAuthor} />
+          </div>
+          <div className={activeNav === 5 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <AuthorList />
           </div>
 
         </div>
