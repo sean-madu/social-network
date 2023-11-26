@@ -4,6 +4,7 @@ Homepage of an individual user
 import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
+import AuthorList from '../search/AuthorList';
 import ProfilePage from '../profilePage/Profile';
 import { useState, useEffect } from 'react';
 import Post from '../createPost/Post';
@@ -11,6 +12,7 @@ import Posts from '../stream/Stream';
 import SERVER_ADDR from '../serverAddress';
 import getCookie from '../getCookies';
 import { refreshCookies } from '../getCookies';
+
 
 
 export default function Homepage() {
@@ -202,6 +204,9 @@ export default function Homepage() {
     </svg>
   }
 
+  let searchPic = () => {
+    return <i class="bi bi-search"></i>
+  }
   //Makes the navbar content
   const renderActiveTabs = () => {
     return (
@@ -212,6 +217,7 @@ export default function Homepage() {
           {makeButton(2, friendRequestsPic, "Friend Requests", friendRequests.length)}
           {makeButton(3, createPic, "Create Post", 0)}
           {makeButton(4, navProfilePic, "Profile", 0)}
+          {makeButton(5, searchPic, "Find Friends", 0)}
 
         </div>
 
@@ -230,6 +236,9 @@ export default function Homepage() {
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} getAuthor={fetchAuthor} />
+          </div>
+          <div className={activeNav === 5 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <AuthorList />
           </div>
 
         </div>
