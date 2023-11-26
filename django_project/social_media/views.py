@@ -13,7 +13,7 @@ import bleach
 import urllib.parse
 
 
-BASE_URL = 'http://127.0.0.1:8000/'
+BASE_URL = 'https://cmput404-social-network-401e4cab2cc0.herokuapp.com/'
 
 
 # For authentication 

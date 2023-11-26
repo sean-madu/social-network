@@ -19,7 +19,7 @@ class Author(models.Model):
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.host:
-            self.host = "http://127.0.0.1:8000" #Temp fix while we wait on registering people, also not true of the wider server
+            self.host = "https://cmput404-social-network-401e4cab2cc0.herokuapp.com/" #Temp fix while we wait on registering people, also not true of the wider server
         if not self.url:
             self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         if not self.id:
