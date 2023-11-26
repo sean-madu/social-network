@@ -192,7 +192,8 @@ STATICFILES_DIRS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "https://cmput404-httpacademy-local-cb3d56814192.herokuapp.com/",
 ]
 
 django_on_heroku.settings(locals()) # bottom of the file
