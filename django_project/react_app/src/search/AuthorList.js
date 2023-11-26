@@ -90,11 +90,11 @@ export default function AuthorList(props) {
     else {
       //TODO 
     }
-    fetch(`${authorID}inbox`,
+    fetch(`${authorID}inbox/`,
       {
         method: "POST",
         body: JSON.stringify({
-          "type": "Follow",
+          "type": "follow",
           "summary": "Follow request from team==good (sorry to fix)",
           "actor": userID,
           "object": authorID
