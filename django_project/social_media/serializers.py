@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Post, Author, Comment, Like, Node, FollowRequest, Follower
+from .models import Post, Author, Comment, Like, Node, FollowRequest, Follower, InboxItem
 
 from django.core.exceptions import ValidationError
 
@@ -110,3 +110,7 @@ class Node(serializers.ModelSerializer):
         model = Node
         fields = '__all__'
 
+class InboxItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InboxItem
+        fields = '__all__'
