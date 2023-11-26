@@ -79,7 +79,7 @@ export default function Homepage() {
   ];
 
   //Props
-  const [friendRequests, setFriendRequests] = useState(testFollows); //TODO hook this up with the database
+  const [friendRequests, setFriendRequests] = useState([]); //TODO hook this up with the database
   const [activeNav, setActiveNav] = useState(0);
   const [userPosts, setUserPosts] = useState([]);
   const [username, setUsername] = useState("");
@@ -136,10 +136,38 @@ export default function Homepage() {
       })
   }
 
+  const fetchFriends = (redo = true) => {
+    return fetch(`${SERVER_ADDR}authors/${userID}/inbox`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => {
+            let followRequests = []
+            json.forEach((elem) => {
+              if (elem.type == "follow")
+                followRequests.push(elem)
+
+            })
+            setFriendRequests(followRequests)
+          })
+        }
+        else {
+          if (res.status == 401 && redo)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                fetchFriends(false)
+              }
+            )
+
+        }
+
+      })
+  }
   //Effects
   useEffect(() => {
     fetchAuthor();
     fetchAuthorPosts();
+    fetchFriends();
   }, []);
 
 

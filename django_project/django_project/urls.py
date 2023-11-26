@@ -42,8 +42,8 @@ urlpatterns = [
     # Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
-    path('authors/<uuid:author_key>/followers', FollowerList, name="follower-list"),
-    path('authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetail, name="follower-detail"),
+    path('authors/<uuid:author_key>/followers/', FollowerList, name="follower-list"),
+    path('authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetail, name="follower-detail"),
     path('user/<str:username>/', getAuthorFromUser, name="get-author"),
     path('authors/<uuid:author_key>/inbox/', InboxView, name='inbox'),
     # Posts

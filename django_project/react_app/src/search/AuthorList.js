@@ -90,6 +90,8 @@ export default function AuthorList(props) {
     else {
       //TODO 
     }
+    console.log(userID)
+    console.log(authorID)
     fetch(`${authorID}inbox/`,
       {
         method: "POST",
@@ -99,7 +101,11 @@ export default function AuthorList(props) {
           "actor": userID,
           "object": authorID
         }),
-        headers
+        headers: {
+          'Authorization': `Bearer ${getCookie("access")}`,
+          'Content-Type': 'application/json',
+
+        }
       })
       .then((res) => {
         if (res.ok) {
@@ -110,6 +116,9 @@ export default function AuthorList(props) {
             headers = { 'Authorization': `Bearer ${getCookie("access")}` }
             handleSumbitReq(authorID, false)
           })
+        }
+        else {
+          res.json().then((j) => (console.log(j)))
         }
       })
   }

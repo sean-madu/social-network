@@ -339,15 +339,21 @@ def InboxView(request, author_key):
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':
+        print(request.data)
+        print("is post")
+ 
         try:
             author = Author.objects.get(pk = author_key)
             data = request.data.copy()
             data['author'] = author_key
             if data['type'] == 'post'  or  data['type'] == 'comment' or data['type'] == 'like':
+                print("needs id")
                 if not 'id' in data or len(data['id']) == 0:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             elif data['type'] == 'follow':
+                print("is follow")
                 if not 'actor' in data:
+                    print("o actor")
                     return Response(status=status.HTTP_400_BAD_REQUEST)
                 followReq = {"actor" : data['actor'], "object": author.id, "summary": "follow request from someone"}
                 serializer = FollowRequestSerializer(data=followReq)
@@ -355,12 +361,13 @@ def InboxView(request, author_key):
                     serializer.save()
                     data['object'] = author.id
             else:
-                
+                print("no type")
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer = InboxItemSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+            print("serializer err")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
