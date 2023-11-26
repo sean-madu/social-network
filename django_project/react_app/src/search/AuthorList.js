@@ -90,10 +90,12 @@ export default function AuthorList(props) {
     else {
       //TODO 
     }
-    fetch(`${authorID}/followers/${new URLSearchParams(window.location.search).get('user')}`,
+    fetch(`${authorID}inbox`,
       {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify({
+          "type": "Follow",
+          "summary": "Follow request from team==good (sorry to fix)",
           "actor": userID,
           "object": authorID
         }),
@@ -101,7 +103,7 @@ export default function AuthorList(props) {
       })
       .then((res) => {
         if (res.ok) {
-          alert('REQ SENT')
+          alert('REQUEST SENT')
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
@@ -124,7 +126,7 @@ export default function AuthorList(props) {
               return <li class="list-group-item" key={author.id}>
 
                 <div className="p-2">{author.displayName}</div>
-                {!author.following && <button type="button" class="btn btn-primary">SEND FOLLOW REQUEST</button>}
+                {!author.following && <button type="button" onClick={(e) => { handleSumbitReq(author.id) }} class="btn btn-primary">SEND FOLLOW REQUEST</button>}
               </li>
             })}
           </ul>
