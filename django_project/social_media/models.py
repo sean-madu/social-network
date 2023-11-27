@@ -7,11 +7,7 @@ from django.core.exceptions import ValidationError
 
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-<<<<<<< HEAD
     key = models.UUIDField(primary_key=True, default=uuid4)
-=======
-    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
->>>>>>> 7eeb4a0cb66b24f67f781ea0243348a4091e568b
     id = models.URLField(null=True)
     host = models.URLField(null=True)
     displayName = models.CharField(max_length=32)
