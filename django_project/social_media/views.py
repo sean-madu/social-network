@@ -16,7 +16,6 @@ import urllib.parse
 
 BASE_URL = 'https://cmput404-social-network-401e4cab2cc0.herokuapp.com/'
 
-
 # For authentication 
 from django.contrib.auth import authenticate, login
 import base64
@@ -29,22 +28,47 @@ from rest_framework.permissions import AllowAny
 from .permissions import CustomPermission
 # from django.views.decorators.csrf import csrf_exempt
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def Register(request):
-    if request.method == 'POST':
-        print(request.data)
-        user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
-    return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+# For Swagger UI api documentation
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def Register(request):
+#     if request.method == 'POST':
+#         print(request.data)
+#         user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
+#     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
+# TODO: Update the swagger scheme according to Madu's refactor
 @permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve authors.",
+    responses={200: 'OK'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a new author.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='user pk', nullable=True),
+            'id': openapi.Schema(type=openapi.TYPE_STRING, description='id', nullable=True),
+            'host': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'displayName': openapi.Schema(type=openapi.TYPE_STRING, description='display name'),
+            'url': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'github': openapi.Schema(type=openapi.TYPE_STRING, description='github url', nullable=True),
+            'profileImage': openapi.Schema(type=openapi.TYPE_STRING, description='profile image url', nullable=True),
+        },
+        required=['displayName']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
+        # use default paginator set in settings
         paginator = PageNumberPagination()
         authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
         result_page = paginator.paginate_queryset(authors, request)
@@ -102,7 +126,35 @@ def AuthorListAPI(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@permission_classes([CustomPermission])  
+@permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an author.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Update an author.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='user pk', nullable=True),
+            'id': openapi.Schema(type=openapi.TYPE_STRING, description='id', nullable=True),
+            'host': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'displayName': openapi.Schema(type=openapi.TYPE_STRING, description='display name'),
+            'url': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'github': openapi.Schema(type=openapi.TYPE_STRING, description='github url', nullable=True),
+            'profileImage': openapi.Schema(type=openapi.TYPE_STRING, description='profile image url', nullable=True),
+        },
+        required=[]
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete an author.",
+    responses={204: 'No Content', 404: 'Not Found'}
+)
 @api_view(['GET','POST','DELETE'])
 def AuthorDetail(request, author_key):
     try:
@@ -126,8 +178,81 @@ def AuthorDetail(request, author_key):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve authors.",
+    responses={200: 'OK'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a new author.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='user pk', nullable=True),
+            'id': openapi.Schema(type=openapi.TYPE_STRING, description='id', nullable=True),
+            'host': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'displayName': openapi.Schema(type=openapi.TYPE_STRING, description='display name'),
+            'url': openapi.Schema(type=openapi.TYPE_STRING, description='uuid', nullable=True),
+            'github': openapi.Schema(type=openapi.TYPE_STRING, description='github url', nullable=True),
+            'profileImage': openapi.Schema(type=openapi.TYPE_STRING, description='profile image url', nullable=True),
+        },
+        required=['displayName']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
+@api_view(['GET','POST'])
+def AuthorListAPI(request):
+    if request.method == 'GET':
+        paginator = PageNumberPagination()
+        authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
+        result_page = paginator.paginate_queryset(authors, request)
 
+
+        if result_page:
+            serializer = AuthorSerializer(result_page, many=True) 
+            
+            return JsonResponse({"type": "authors", "items" : serializer.data})
+            #uncomment when we need to redo pages
+            # return paginator.get_paginated_response(serializer.data)
+            
+        # If somehow pagination doesn't occur, return the whole list anyways
+        serializer = AuthorSerializer(authors, many=True)
+
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        # bool = IsRemote(request)
+        # if bool:
+        #     return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        serializer = AuthorSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 @permission_classes([CustomPermission])  
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve posts.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a post.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'content': openapi.Schema(type=openapi.TYPE_STRING, description='content'),
+            'title': openapi.Schema(type=openapi.TYPE_STRING, description='title'),
+            'unlisted': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='unlisted'),
+        }, 
+        required = ['content', 'title', 'unlisted']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
 @api_view(['GET', 'POST'])
 def PostList(request, author_key):
     try:
@@ -166,6 +291,35 @@ def PostList(request, author_key):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve a post.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Update a post.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'content': openapi.Schema(type=openapi.TYPE_STRING, description='content'),
+            'title': openapi.Schema(type=openapi.TYPE_STRING, description='title'),
+            'unlisted': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='unlisted'),
+        }, 
+        required = []
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete a post.",
+    responses={204: 'No Content', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['PUT'],
+    operation_description="Update a post. (Not implemented because we have partial 'POSTs')",
+    responses={200: 'OK', 400: 'Bad Request'}
+)
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 def PostDetail(request, author_key, post_key):
     try:
@@ -193,7 +347,7 @@ def PostDetail(request, author_key, post_key):
 
             elif request.method == 'POST':
                 # Handle POST requests to update a specific post
-                serializer = PostSerializer(post, data=request.data)
+                serializer = PostSerializer(post, data=request.data, partial=True)
                 request.data['author'] = author.key
                 if serializer.is_valid():
                     serializer.save()
@@ -219,6 +373,24 @@ def PostDetail(request, author_key, post_key):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve comments.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a comment.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'comment': openapi.Schema(type=openapi.TYPE_STRING, description='content'),
+            'author': openapi.Schema(type=openapi.TYPE_STRING, description='author pk'),
+        }, 
+        required = ['comment', 'author']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
@@ -249,7 +421,17 @@ def CommentList(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-@permission_classes([CustomPermission])  
+@permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve a comment.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete a comment.",
+    responses={204: 'No Content', 404: 'Not Found'}
+)  
 @api_view(['GET', 'DELETE'])
 def CommentDetail(request, post_key, author_key, comment_key):
     try:
@@ -272,6 +454,23 @@ def CommentDetail(request, post_key, author_key, comment_key):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve likes on comment/post.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a like on a comment/post.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'author': openapi.Schema(type=openapi.TYPE_STRING, description='author pk'), # TODO: 500 Internal Server Error! AttributeError at /authors/c4eb81f0-4f4f-46e4-be92-a9d6265e6161/posts/7d180470-190f-40f8-a918-2eb3527907ab/comments/56cb8209-3204-448b-abca-a3bac4cef992/likes/ Exception Value: 'NoneType' object has no attribute 'key' 
+        }, 
+        required = ['author']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
 @api_view(['GET', 'POST'])
 def LikesForLikes(request, author_key, post_key, comment_key=None):
     post = get_object_or_404(Post, key=post_key)
@@ -309,12 +508,22 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 @permission_classes([CustomPermission])
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve likes from an author.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
 @api_view(['GET'])
 def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)
     serializer = LikeSerializer(likes, many=True)
     return Response(serializer.data)
 
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve author from user.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
 @api_view(['GET'])
 def getAuthorFromUser(request, username):
     try:
@@ -328,7 +537,11 @@ def getAuthorFromUser(request, username):
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve followers of an author.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
 @api_view(['GET'])
 def FollowerList(request, author_key):
     if request.method == 'GET':
@@ -342,6 +555,11 @@ def AuthorKeyToJson(key):
     serializer = AuthorSerializer(author)
     return serializer.data
 
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve followers of an author.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
 @api_view(['GET'])
 def FollowerListAPI(request, author_key):
     if request.method == 'GET':
@@ -352,8 +570,23 @@ def FollowerListAPI(request, author_key):
         for item in serializer.data:
             followers.append(AuthorKeyToJson(item['actor']))
         return  JsonResponse({"type": "followers", "items" : followers})
-
-@api_view(['GET', 'PUT', 'DELETE'])        
+    
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an author-follower relationship.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['PUT'],
+    operation_description="Update an author-follower relationship.",
+    responses={201: 'Created', 400: 'Bad Request'}
+)    
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete an author-follower relationship.",
+    responses={204: 'No Content', 404: 'Not Found'}
+)
+@api_view(['GET', 'PUT', 'DELETE'])   
 def FollowerDetail(request, author_key, foreign_id):
     if request.method == 'PUT':
         serializer = FollowerSerializer(data=request.data)
@@ -379,6 +612,21 @@ def FollowerDetail(request, author_key, foreign_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an author-follower relationship.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['PUT'],
+    operation_description="Update an author-follower relationship.",
+    responses={201: 'Created', 400: 'Bad Request'}
+)    
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete an author-follower relationship.",
+    responses={204: 'No Content'}
+)
 @api_view(['GET', 'PUT', 'DELETE'])        
 def FollowerDetailAPI(request, author_key, foreign_id):
     if request.method == 'PUT':
@@ -412,7 +660,22 @@ def FollowerDetailAPI(request, author_key, foreign_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['GET', 'POST', 'DELETE'])    
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an author.",
+    responses={200: 'OK'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Update an author.",
+    responses={201: 'Created', 400: 'Bad Request'}
+)    
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Retrieve an author.",
+    responses={200: 'OK'}
+) 
+@api_view(['GET', 'POST', 'DELETE'])   
 def InboxView(request, author_key):
     if request.method == 'GET':
         try:
@@ -464,7 +727,21 @@ def InboxView(request, author_key):
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
-
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an author's inbox.",
+    responses={200: 'OK'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Add item to an author's inbox.", # TODO: 500 Internal Server Error! /social_media/views.py", line 728, in InboxViewAPI if data['type'] == 'post Exception Type: KeyError at /service/authors/c4eb81f0-4f4f-46e4-be92-a9d6265e6161/inbox/Exception Value: 'type'
+    responses={201: 'Created', 400: 'Bad Request'}
+)    
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Delete item from an author's inbox.",
+    responses={200: 'OK'}
+) 
 @api_view(['GET', 'POST', 'DELETE'])    
 def InboxViewAPI(request, author_key):
     if request.method == 'GET':
@@ -480,7 +757,7 @@ def InboxViewAPI(request, author_key):
             author = Author.objects.get(pk = author_key)
             data = request.data.copy()
             if data['type'] == 'post':
-                    if not 'id'  in data:
+                    if not 'key'  in data: #only local should send key
                         print("no id")
                         
                         serializer = PostSerializer(data=data)
