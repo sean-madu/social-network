@@ -143,9 +143,10 @@ def PostList(request, author_key):
             # Sanitize HTML content in the list view
             for post in serializer.data:
                 post['content'] = bleach.clean(post['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                post['author'] = AuthorKeyToJson(post['author'])
 
 
-            return Response(serializer.data)
+            return JsonResponse({"type":"posts", "items":serializer.data})
 
 
         elif request.method == 'POST':
@@ -176,13 +177,18 @@ def PostDetail(request, author_key, post_key):
             if request.method == 'GET':
                 # Handle GET requests to retrieve a specific post
                 serializer = PostSerializer(post)
-
+                
 
                 # Sanitize HTML content in the detail view
                 serializer.data['content'] = bleach.clean(serializer.data['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
-
-
-                return Response(serializer.data)
+                serializer.data['author'] = AuthorKeyToJson(serializer.data['author'])
+                obj = {}
+                for key in serializer.data:
+                    
+                    obj[key] = serializer.data[key]
+                    if key == 'author':
+                        obj['author'] = AuthorKeyToJson(obj['author'])
+                return JsonResponse(obj)
 
 
             elif request.method == 'POST':

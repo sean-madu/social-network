@@ -72,4 +72,5 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
 
+
 ]
