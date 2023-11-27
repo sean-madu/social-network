@@ -7,11 +7,11 @@ from django.core.exceptions import ValidationError
 
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField()
-    host = models.URLField()
+    key = models.UUIDField(primary_key=True, default=uuid4)
+    id = models.URLField(null=True)
+    host = models.URLField(null=True)
     displayName = models.CharField(max_length=32)
-    url = models.URLField()
+    url = models.URLField(null=True)
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
@@ -24,6 +24,8 @@ class Author(models.Model):
             self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         if not self.id:
             self.id = self.host + reverse('author-detail', kwargs={'author_key': self.key})
+            self.id = self.id[0:len(self.id) - 1] #get rid of trailing /
+
         super().save(*args, **kwargs)
 
 
@@ -55,7 +57,7 @@ class Post(models.Model):
 
 
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField(editable=False)
+    id = models.URLField(null=True)
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
@@ -64,7 +66,7 @@ class Post(models.Model):
     categories = models.JSONField(null=True)
     count = models.IntegerField(default=0)
     comments = models.URLField(editable=False)
-    published = models.DateTimeField(auto_now_add=True, editable=False)
+    published = models.DateTimeField(auto_now_add=True)
     unlisted = models.BooleanField()
     commentsSrc = models.JSONField(null=True)
 
@@ -181,6 +183,8 @@ class Node(models.Model):
     remote_ip = models.CharField(primary_key=True, max_length=255)
     remote_user = models.OneToOneField(User, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=True)
+    username = models.CharField(max_length=255, blank=True, null=True)
+    password = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
         return self.remote_ip
