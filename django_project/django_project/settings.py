@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import django_on_heroku # top of the file
-
+from corsheaders.defaults import default_headers
 from datetime import timedelta
 from pathlib import Path
 import os
@@ -187,6 +187,14 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'react_app/build/static')
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "X-Client-ID",
+    "local-authorization"
+    # Add other custom headers
 ]
 
 CORS_ALLOWED_ORIGINS = [

@@ -69,6 +69,7 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox/', InboxViewAPI, name='inbox'),
-
+    path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
 
 ]
