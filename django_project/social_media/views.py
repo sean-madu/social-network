@@ -3,17 +3,18 @@ from django.conf import settings
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
 
 from .models import Post, Author, Comment, Like, User, Follower, FollowRequest, Node, InboxItem
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer, InboxItemSerializer
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer, InboxItemSerializer, DummyAuthor
 
 import bleach
 import urllib.parse
 
 
-BASE_URL = 'http://127.0.0.1:8000/'
+BASE_URL = 'https://cmput404-social-network-401e4cab2cc0.herokuapp.com/'
 
 
 # For authentication 
@@ -37,31 +38,58 @@ def Register(request):
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@permission_classes([CustomPermission])
 
+
+
+@permission_classes([CustomPermission])
 @api_view(['GET','POST'])
 def AuthorList(request):
     if request.method == 'GET':
-        # if IsRemote(request) is True:
-        #     state = BasicAuth(request)
-        #     if state is 1:
-        #         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        # else:
-        #     state = JWTAuth(request)
-        #     if state is 1:
-        #         return Response({'detail': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # use default paginator set in settings
         paginator = PageNumberPagination()
         authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
         result_page = paginator.paginate_queryset(authors, request)
 
 
         if result_page:
-            serializer = AuthorSerializer(result_page, many=True)
+            serializer = AuthorSerializer(result_page, many=True) 
+            
+
             return paginator.get_paginated_response(serializer.data)
+            
         # If somehow pagination doesn't occur, return the whole list anyways
         serializer = AuthorSerializer(authors, many=True)
+
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        # bool = IsRemote(request)
+        # if bool:
+        #     return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        serializer = AuthorSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@permission_classes([CustomPermission])
+@api_view(['GET','POST'])
+def AuthorListAPI(request):
+    if request.method == 'GET':
+        paginator = PageNumberPagination()
+        authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
+        result_page = paginator.paginate_queryset(authors, request)
+
+
+        if result_page:
+            serializer = AuthorSerializer(result_page, many=True) 
+            
+            return JsonResponse({"type": "authors", "items" : serializer.data})
+            #uncomment when we need to redo pages
+            # return paginator.get_paginated_response(serializer.data)
+            
+        # If somehow pagination doesn't occur, return the whole list anyways
+        serializer = AuthorSerializer(authors, many=True)
+
         return Response(serializer.data)
     
     elif request.method == 'POST':
@@ -298,10 +326,26 @@ def getAuthorFromUser(request, username):
 @api_view(['GET'])
 def FollowerList(request, author_key):
     if request.method == 'GET':
-        author_id = Author.objects.get(pk=author_key).id
-        follower = Follower.objects.filter(object=author_id)
+        author = Author.objects.get(pk=author_key)
+        follower = Follower.objects.filter(object=author)
         serializer = FollowerSerializer(follower, many=True)
         return  Response(serializer.data)
+
+def AuthorKeyToJson(key):
+    author = Author.objects.get(pk = key)
+    serializer = AuthorSerializer(author)
+    return serializer.data
+
+@api_view(['GET'])
+def FollowerListAPI(request, author_key):
+    if request.method == 'GET':
+        author = Author.objects.get(pk=author_key)
+        follower = Follower.objects.filter(object=author)
+        serializer = FollowerSerializer(follower, many=True)
+        followers = []
+        for item in serializer.data:
+            followers.append(AuthorKeyToJson(item['actor']))
+        return  JsonResponse({"type": "followers", "items" : followers})
 
 @api_view(['GET', 'PUT', 'DELETE'])        
 def FollowerDetail(request, author_key, foreign_id):
@@ -311,6 +355,7 @@ def FollowerDetail(request, author_key, foreign_id):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     if request.method == 'GET':
         author_id = Author.objects.get(pk=author_key).id
         try:
@@ -323,6 +368,39 @@ def FollowerDetail(request, author_key, foreign_id):
         author_id = Author.objects.get(pk=author_key).id
         try:
             follower = Follower.objects.get(object=author_id, actor__contains=foreign_id)
+            follower.delete()
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'PUT', 'DELETE'])        
+def FollowerDetailAPI(request, author_key, foreign_id):
+    if request.method == 'PUT':
+        try:
+            author = Author.objects.get(pk=author_key)
+            follower = Author.objects.get(pk=foreign_id) # We can assume author already exists because follow request shouldve saved it
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        print("got here")
+        serializer = FollowerSerializer(data={"actor" : follower.key, "object" : author.key})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        author = Author.objects.get(pk=author_key)
+        foreign = Author.objects.get(pk=foreign_id)
+        try:
+            follower = Follower.objects.get(object=author, actor=foreign)
+            serializer = AuthorSerializer(foreign)
+            return  Response(serializer.data)
+        except Follower.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        author_id = Author.objects.get(pk=author_key)
+        follower = Author.objects.get(pk=foreign_id)
+        try:
+            follower = Follower.objects.get(object=author_id, actor=foreign_id)
             follower.delete()
         except Follower.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -369,6 +447,76 @@ def InboxView(request, author_key):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             print("serializer err")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'DELETE':
+        try:
+            author = Author.objects.get(pk = author_key)
+            items = InboxItem.objects.filter(author=author)
+            items.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+
+@api_view(['GET', 'POST', 'DELETE'])    
+def InboxViewAPI(request, author_key):
+    if request.method == 'GET':
+        try:
+            author = Author.objects.get(pk = author_key)
+            items = InboxItem.objects.filter(author=author)
+            serializer = InboxItemSerializer(items, many=True)
+            return JsonResponse({"type": "inbox", "author": author.id, "items": serializer.data})
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'POST':
+        try:
+            author = Author.objects.get(pk = author_key)
+            data = request.data.copy()
+            if data['type'] == 'post':
+                    if not 'key'  in data: #only local should send key
+                        print("no id")
+                        
+                        serializer = PostSerializer(data=data)
+                        post = []
+                        if serializer.is_valid():
+                                print(serializer.validated_data)
+                                post = serializer.save()
+                        else:
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        post = Post.objects.get(id=data['id'])
+                        serializer = PostSerializer(post)
+                        #serializer.is_valid()
+                    inboxSerializer = InboxItemSerializer(data={"author" : author.key, "post" : post.key, "type" : "post" })
+                    if inboxSerializer.is_valid():
+                            inboxSerializer.save()
+                            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response(inboxSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            elif data['type'].upper() == 'FOLLOW':
+                object = Author.objects.get(pk = author_key)
+                try:
+                    actor = Author.objects.get(id = data['actor']['id'])
+                except Author.DoesNotExist:
+                    serializer = DummyAuthor(data=data['actor'])
+                    if serializer.is_valid():
+                        actor = serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer = FollowRequestSerializer(data={"actor": actor.key, "object": object.key, "type": "Follow", "summary": f"{actor.displayName} wants to follow {object.displayName}"})
+                if serializer.is_valid():
+                    followReq = serializer.save()
+                    serializer = InboxItemSerializer(data={"author": object.key, "follow_request": followReq.key, "type": "Follow"})
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'DELETE':

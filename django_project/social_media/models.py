@@ -6,12 +6,12 @@ from django.core.exceptions import ValidationError
 
 
 class Author(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField(editable=False)
-    host = models.URLField(editable=False)
+    id = models.URLField()
+    host = models.URLField()
     displayName = models.CharField(max_length=32)
-    url = models.URLField(editable=False)
+    url = models.URLField()
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
@@ -19,12 +19,13 @@ class Author(models.Model):
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.host:
-            self.host = "http://127.0.0.1:8000" #Temp fix while we wait on registering people, also not true of the wider server
+            self.host = "https://cmput404-social-network-401e4cab2cc0.herokuapp.com" #Temp fix while we wait on registering people, also not true of the wider server
         if not self.url:
             self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         if not self.id:
             self.id = self.host + reverse('author-detail', kwargs={'author_key': self.key})
         super().save(*args, **kwargs)
+
 
 
     # Change if required...
@@ -165,16 +166,16 @@ class Like(models.Model):
 
 class FollowRequest(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    actor = models.URLField()
-    object = models.URLField()
+    actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='actor')
+    object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='object')
     # Actor wants to follow the object
     type = models.CharField(editable=False, default="Follow", max_length=50)
     summary = models.CharField(max_length=255) #WHY WHY WHY
 
 class Follower(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    actor = models.URLField()
-    object = models.URLField()
+    actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
+    object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='followee')
     
 class Node(models.Model):
     remote_ip = models.CharField(primary_key=True, max_length=255)
@@ -187,9 +188,7 @@ class Node(models.Model):
 class InboxItem(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    id = models.URLField(blank=True, null=True)
     follow_request = models.ForeignKey(FollowRequest, blank=True, null=True, on_delete=models.CASCADE)
-    type = models.CharField(max_length=255)
-    actor = models.URLField( blank=True, null=True)
-    object = models.URLField( blank=True, null=True)
+    post = models.ForeignKey(Post, null=True, blank=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=225) #Post, like etc
     # like =models.URLField(blank=True, null=True)
