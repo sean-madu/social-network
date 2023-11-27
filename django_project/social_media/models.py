@@ -8,10 +8,10 @@ from django.core.exceptions import ValidationError
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField()
-    host = models.URLField()
+    id = models.URLField(null=True)
+    host = models.URLField(null=True)
     displayName = models.CharField(max_length=32)
-    url = models.URLField()
+    url = models.URLField(null=True)
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
