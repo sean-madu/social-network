@@ -25,7 +25,13 @@ class PostSerializer(serializers.ModelSerializer):
         if value not in allowed_visibilities:
             raise ValidationError("Invalid visibility")
         return value
-    
+
+class DummyAuthor(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = '__all__'
+
+        
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
@@ -37,9 +43,12 @@ class AuthorSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        domain = self.context['request'].get_host()
-        validated_data['host'] = f"http://{domain}"
-        return super().create(validated_data)
+            domain = self.context['request'].get_host()
+            if not 'host' in validated_data:
+                validated_data['host'] = f"http://{domain}"
+            return super().create(validated_data)
+    
+
     
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,14 +105,7 @@ class FollowerSerializer(serializers.ModelSerializer):
         model = Follower
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if not data['object'].endswith("/"):
-            data['object'] += "/"
-        if not data['actor'].endswith("/"):
-            data['actor'] += "/"
-            
-        return data
+
 
 class Node(serializers.ModelSerializer):
     class Meta:

@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import InboxView
+from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -62,6 +62,13 @@ urlpatterns = [
 
     # Auth
     path('auth/', include('social_media.urls')),
+
+    # Api
+    path('service/authors/', AuthorListAPI, name='author-list'),
+    path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
+    path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
+    path('service/authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetailAPI, name="follower-detail"),
+    path('service/authors/<uuid:author_key>/inbox/', InboxViewAPI, name='inbox'),
 
 
 ]
