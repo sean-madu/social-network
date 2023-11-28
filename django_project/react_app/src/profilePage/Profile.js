@@ -256,6 +256,7 @@ export default function ProfilePage(props) {
         </div>
           {/* Posts by the User */}
           <div className='row' >
+            {console.log("prifel post", props.userPosts)}
             <Posts posts={props.userPosts} getPosts={props.getUserPosts} proxy={true} user={true} />
           </div>
         </div>

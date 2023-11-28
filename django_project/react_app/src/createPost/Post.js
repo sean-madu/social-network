@@ -55,13 +55,12 @@ export default function Post(props) {
   };
 
   const postToInbox = (follower, post, redo = true) => {
-    fetch(`${follower.actor}inbox/`,
+    fetch(`${follower.actor.id}/inbox`,
       {
         method: "POST",
-        body: JSON.stringify({
-          "id": post.id,
-          "type": "post",
-        }),
+        body: JSON.stringify(
+          createPostItem()
+        ),
         headers: {
           "Content-type": "application/json; charset=UTF-8",
           'Authorization': `Bearer ${accessCookie}`
@@ -145,7 +144,7 @@ export default function Post(props) {
                   console.log("got followers")
                   res.json().then((json) => {
                     console.log(json, "followers")
-                    json.forEach((follower) => {
+                    json.items.forEach((follower) => {
                       postToInbox(follower, post)
                     })
                   })
@@ -162,7 +161,7 @@ export default function Post(props) {
                       .then((res) => {
                         if (res.ok) {
                           res.json().then((json) => {
-                            json.forEach((follower) => {
+                            json.items.forEach((follower) => {
                               postToInbox(follower)
                             })
                           })

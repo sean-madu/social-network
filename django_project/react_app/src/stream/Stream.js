@@ -25,6 +25,8 @@ import PostView from './PostView';
 
 const Posts = (props) => {
   const getPosts = () => {
+    console.log(props)
+    console.log(props.posts, "postmap notfun")
     return props.posts.map((post) => {
       return (
         <li key={post.id} className="list-group-item">

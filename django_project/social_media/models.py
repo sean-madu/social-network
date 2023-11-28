@@ -57,7 +57,7 @@ class Post(models.Model):
 
 
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField(null=True)
+    id = models.URLField(null=True, blank=True)
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)

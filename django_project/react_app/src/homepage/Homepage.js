@@ -85,7 +85,7 @@ export default function Homepage() {
   const [username, setUsername] = useState("");
 
   const fetchAuthor = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+    return fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
       .then((res) => {
         if (res.ok) {
           return res.json().then((json) => setUsername(json.displayName))
@@ -110,21 +110,21 @@ export default function Homepage() {
   }
 
   const fetchAuthorPosts = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+    return fetch(`${SERVER_ADDR}service/authors/${userID}/posts`, { headers })
       .then((res) => {
         if (res.ok) {
-          return res.json().then((json) => setUserPosts(json))
+          return res.json().then((json) => setUserPosts(json.items))
         }
         else {
           if (res.status == 401)
             refreshCookies(
               () => {
                 headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-                return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+                return fetch(`${SERVER_ADDR}service/authors/${userID}/posts`, { headers })
                   .then((res) => {
                     if (res.ok) {
                       return res.json().then((json) => {
-                        setUserPosts(json)
+                        setUserPosts(json.items)
                       })
                     }
                   })
@@ -137,12 +137,12 @@ export default function Homepage() {
   }
 
   const fetchFriends = (redo = true) => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/inbox`, { headers })
+    return fetch(`${SERVER_ADDR}service/authors/${userID}/inbox`, { headers })
       .then((res) => {
         if (res.ok) {
           return res.json().then((json) => {
             let followRequests = []
-            json.forEach((elem) => {
+            json.items.forEach((elem) => {
               if (elem.type == "follow")
                 followRequests.push(elem)
 
@@ -251,7 +251,7 @@ export default function Homepage() {
 
         <div className="tab-content  mx-auto" style={{ width: "85%" }} id="v-pills-tabContent">
           <div className={activeNav === 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <Posts posts={testPosts} />
+            <Posts posts={[]} />
           </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
             <NotificationList comments={testNotifs} />
