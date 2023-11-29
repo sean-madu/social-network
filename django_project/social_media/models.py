@@ -19,12 +19,20 @@ class Author(models.Model):
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.host:
-            self.host = "https://cmput404-social-network-401e4cab2cc0.herokuapp.com" #Temp fix while we wait on registering people, also not true of the wider server
+            self.host = "https://cmput404-social-network-401e4cab2cc0.herokuapp.com/" #Temp fix while we wait on registering people, also not true of the wider server
+        if not self.host.endswith("/"):
+            self.host = self.host + "/"
         if not self.url:
-            self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
+            host = self.host[0: len(self.host) - 1]
+            self.url = host + reverse('author-detail', kwargs={'author_key': self.key})
+            #get rid of trailing /
+            if self.url.endswith("/"):
+                self.url = self.url[0:len(self.url) - 1] 
         if not self.id:
-            self.id = self.host + reverse('author-detail', kwargs={'author_key': self.key})
-            self.id = self.id[0:len(self.id) - 1] #get rid of trailing /
+            self.id = host + reverse('author-detail', kwargs={'author_key': self.key})
+            #get rid of trailing /
+            if self.id.endswith("/"):
+                self.id = self.id[0:len(self.id) - 1]
 
         super().save(*args, **kwargs)
 
