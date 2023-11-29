@@ -749,7 +749,16 @@ def InboxViewAPI(request, author_key):
             author = Author.objects.get(pk = author_key)
             items = InboxItem.objects.filter(author=author)
             serializer = InboxItemSerializer(items, many=True)
-            return JsonResponse({"type": "inbox", "author": author.id, "items": serializer.data})
+            #Make JSON so that inbox view works with spec
+            data = []
+            for item in serializer.data:
+                if item['type'] == 'Follow':
+                    followrequest = FollowRequest.objects.get(pk=item['follow_request'])
+                    actorJson = AuthorKeyToJson(followrequest.actor.key)
+                    objectJson = AuthorKeyToJson(followrequest.object.key)
+                    data.append({"actor": actorJson, "object": objectJson, "type": "Follow"})
+
+            return JsonResponse({"type": "inbox", "author": author.id, "items":  data})
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':

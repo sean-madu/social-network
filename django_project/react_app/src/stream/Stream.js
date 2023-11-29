@@ -25,8 +25,6 @@ import PostView from './PostView';
 
 const Posts = (props) => {
   const getPosts = () => {
-    console.log(props)
-    console.log(props.posts, "postmap notfun")
     return props.posts.map((post) => {
       return (
         <li key={post.id} className="list-group-item">
@@ -49,7 +47,7 @@ const Posts = (props) => {
               <h5 className="mb-3">Stream</h5>
 
               <ul className="list-group">
-                {getPosts()}
+                {props.posts.length > 0 ? getPosts() : <h1> NO POSTS TO SHOW HERE... </h1>}
               </ul>
 
             </div>

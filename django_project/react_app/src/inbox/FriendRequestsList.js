@@ -25,7 +25,7 @@ export default function FriendRequestsList(props) {
   }
   const acceptFollow = (item, redo = true) => {
     console.log(item.actor)
-    fetch(`${item.object}followers/${item.actor.slice(item.actor.indexOf("authors/") + 8)}`,
+    fetch(`${item.object.id}/followers/${item.actor.id.slice(item.actor.id.indexOf("authors/") + 8)}`,
       {
         method: "PUT",
         body: JSON.stringify({
@@ -75,7 +75,7 @@ export default function FriendRequestsList(props) {
                 </svg>
               </div>
               <div className='column pt-2'>
-                <p> Friend Request from {item.actor.slice(0, 20)}... (display name eventually) </p>
+                <p> Friend Request from {item.actor.displayName}</p>
                 <div className='btn-group' role='group'>
                   <button type="button" onClick={(e) => { handleAccept(item) }} class="btn btn-outline-success">
                     <span>

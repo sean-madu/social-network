@@ -6,49 +6,7 @@ import { json } from "react-router-dom";
 export default function AuthorList(props) {
   const [authors, setAuthors] = useState([]);
   const userID = `${SERVER_ADDR}authors/${new URLSearchParams(window.location.search).get('user')}`
-  const checkFollowing = (authors, redo = true) => {
 
-    fetch(`${userID}/followers`, { headers })
-      .then((res) => {
-        if (res.status == 401 && redo) {
-          refreshCookies(() => {
-            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-            checkFollowing(authors, false);
-          })
-        }
-        else if (res.ok) {
-          res.json().then((json) => {
-            console.log(json, "results")
-            json.forEach((follower) => {
-              let temp = authors
-              temp.forEach((e) => {
-                if (e.id == follower.actor) {
-                  e['following'] = true
-                }
-                else if (e.id == userID) {
-                  e['following'] = false
-                }
-                else if (e['following'] == null) {
-                  //True never gets set back to false
-                  e['following'] = false
-
-                }
-
-              })
-              setAuthors(temp)
-
-            })
-
-          })
-        }
-        else {
-          res.json().then((json) => {
-            console.log("failed to get author followers", json)
-          })
-        }
-      })
-
-  }
   let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
   //TODO add thing to fetch remote authors
   const fetchAuthors = (redo = true) => {
@@ -56,9 +14,8 @@ export default function AuthorList(props) {
       .then((res) => {
         if (res.ok) {
           res.json().then((json) => {
-            //checkFollowing(json.results); TODO reccorect to work properly 
+            //checkFollowing(json.results)
             setAuthors(json.results)
-            //fetchAuthorWill(json.results);
           })
         }
         else if (res.status == 401 && redo) {
@@ -92,17 +49,6 @@ export default function AuthorList(props) {
 
   }
 
-  const demoPost = (id) => {
-
-    const username = 'teamgood';
-    const password = 'cmput404';
-
-    const headers = new Headers();
-    headers.append('Authorization', 'Basic ' + btoa(username + ":" + password));
-    fetch(`${id}/posts`, { headers })
-      .then((res) => { console.log(res); return res.json() })
-      .then((j) => j)
-  }
   const fetchAuthorWill2 = (authors) => {
     const url = 'https://whoiswill-3e3036d66f5f.herokuapp.com/service/authors/';
     const username = 'teamgood';
@@ -140,40 +86,49 @@ export default function AuthorList(props) {
 
 
 
-  const getActor = (id) => {
+  const getActor = (id, redo = true) => {
     headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-    console.log(userID)
-    return fetch(userID, { headers })
-      .then((res) => res.json())
+    return fetch(userID + "/", { headers })
+      .then((res) => {
+        if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            getActor(id, false)
+          })
+        }
+        else if (res.ok) {
+          return res.json()
+        }
+      })
       .then((json) => {
+
         handleSumbitReq(id, json)
 
       })
   }
 
   const handleSumbitReq = (authorID, actor, redo = true) => {
-    let url
+    let url = `${authorID}/inbox`
     if (authorID.startsWith(SERVER_ADDR)) {
       headers = { 'Authorization': `Bearer ${getCookie("access")}`, 'Content-Type': 'application/json' }
-      url = `${authorID}inbox/`
     }
     else {
+      //Todo handle stuff from other servers
+      /*
       const username = 'teamgood';
       const password = 'cmput404';
-
-
       headers = { 'Authorization': 'Basic ' + btoa(username + ":" + password), 'Content-Type': 'application/json' };
       url = `${authorID}/inbox`
+      */
     }
     console.log(userID)
     console.log(authorID)
+    let object = authors.find((elem) => elem.id == authorID)
     let req = JSON.stringify({
       "type": "Follow",
-      "summary": "Follow request from team==good (sorry to fix)",
+      "summary": `${actor.displayName} wants to follow ${object.displayName}`,
       "actor": actor,
-      "object": authors.find((elem) => elem.id == authorID)
+      "object": object
     })
-    console.log(req)
     fetch(url,
       {
         method: "POST",
@@ -191,7 +146,6 @@ export default function AuthorList(props) {
         }
         else {
           console.log(res)
-          //res.json().then((j) => (console.log(j)))
           res.text().then((t) => console.log(t))
         }
       })
@@ -209,7 +163,7 @@ export default function AuthorList(props) {
               return <li class="list-group-item" key={author.id}>
 
                 <div className="p-2">{author.displayName}</div>
-                {!author.following && <button type="button" onClick={(e) => { getActor(author.id); demoPost(author.id) }} class="btn btn-primary">SEND FOLLOW REQUEST</button>}
+                {!author.following && <button type="button" onClick={(e) => { getActor(author.id) }} class="btn btn-primary">SEND FOLLOW REQUEST</button>}
 
               </li>
             })}

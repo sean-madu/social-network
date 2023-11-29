@@ -16,7 +16,6 @@ import { refreshCookies } from '../getCookies';
 
 
 export default function Homepage() {
-  console.log(getCookie("access"))
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
@@ -136,14 +135,14 @@ export default function Homepage() {
       })
   }
 
-  const fetchFriends = (redo = true) => {
+  const fetchInbox = (redo = true) => {
     return fetch(`${SERVER_ADDR}service/authors/${userID}/inbox`, { headers })
       .then((res) => {
         if (res.ok) {
           return res.json().then((json) => {
             let followRequests = []
             json.items.forEach((elem) => {
-              if (elem.type == "follow")
+              if (elem.type == "Follow")
                 followRequests.push(elem)
 
             })
@@ -155,7 +154,7 @@ export default function Homepage() {
             refreshCookies(
               () => {
                 headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-                fetchFriends(false)
+                fetchInbox(false)
               }
             )
 
@@ -167,7 +166,7 @@ export default function Homepage() {
   useEffect(() => {
     fetchAuthor();
     fetchAuthorPosts();
-    fetchFriends();
+    fetchInbox();
   }, []);
 
 

@@ -7,6 +7,9 @@ from django.core.exceptions import ValidationError
 
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    # proposed username for author, only used for signup, so that admin can easily connect
+    # user with author
+    proposedUser = models.CharField(max_length=225, null=True, blank=True) 
     key = models.UUIDField(primary_key=True, default=uuid4)
     id = models.URLField(null=True)
     host = models.URLField(null=True)
