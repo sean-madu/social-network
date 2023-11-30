@@ -1,34 +1,54 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import SERVER_ADDR from "../serverAddress";
 import { refreshCookies } from "../getCookies";
 import getCookie from "../getCookies";
 import { json } from "react-router-dom";
 import * as NODES from "../Nodes"
 
+
 export default function AuthorList(props) {
+
   const [authors, setAuthors] = useState([]);
   const userID = `${SERVER_ADDR}authors/${new URLSearchParams(window.location.search).get('user')}`
 
   let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-  //TODO add thing to fetch remote authors
   const fetchAuthors = (redo = true) => {
-    fetch(`${SERVER_ADDR}authors/`, { headers })
+    console.log("calling")
+    fetch(`${SERVER_ADDR}service/authors`, { headers })
       .then((res) => {
         if (res.ok) {
           res.json().then((json) => {
-            //checkFollowing(json.results)
-            setAuthors(json.results)
+
+            setAuthors(json.items)
+            NODES.executeOnRemote((json) => {
+              console.log("new node!")
+              let nodeAuthors = json.items
+              console.log(nodeAuthors, 'node authors')
+
+              setAuthors(prev => {
+                console.log(prev, "normal prev")
+                console.log(nodeAuthors, "normal node auth")
+                let arr = [...prev, ...nodeAuthors]
+                console.log(arr, "normal")
+                return arr
+              })
+
+
+            }, "GET", "/service/authors/", true)
+
           })
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
             headers = { 'Authorization': `Bearer ${getCookie("access")}` }
             fetchAuthors(false)
+            //Get all authors anf log it out
 
           })
         }
         else {
-          res.json().then((j) => console.log(j, "fetch in author list failed"))
+          res.text().then((t) => console.log(t, "fetxh in uth list failed"))
+          //res.json().then((j) => console.log(j, "fetch in author list failed"))
         }
       })
   }
@@ -80,11 +100,28 @@ export default function AuthorList(props) {
 
 
   useEffect(() => {
+    console.log("calling fetch func")
 
     fetchAuthors();
 
 
   }, []);
+
+
+  //For some reaso, fetching authors runs more than once...
+  const filterArr = (arr) => {
+    let copy = arr.slice(0)
+    copy = copy.map((element) => {
+      return JSON.stringify(element)
+    });
+    console.log(copy, "elem copy")
+    let unique = Array.from(new Set(copy))
+    unique = unique.map((elem) => {
+      console.log(elem, "elem")
+      return JSON.parse(elem)
+    })
+    return unique
+  }
 
 
 
@@ -108,49 +145,47 @@ export default function AuthorList(props) {
       })
   }
 
+
   const handleSumbitReq = (authorID, actor, redo = true) => {
-    let url = `${authorID}/inbox`
+
     if (authorID.startsWith(SERVER_ADDR)) {
+      let url = `${authorID}/inbox`
       headers = { 'Authorization': `Bearer ${getCookie("access")}`, 'Content-Type': 'application/json' }
+      let object = authors.find((elem) => elem.id == authorID)
+      let req = JSON.stringify({
+        "type": "Follow",
+        "summary": `${actor.displayName} wants to follow ${object.displayName}`,
+        "actor": actor,
+        "object": object
+      })
+      fetch(url,
+        {
+          method: "POST",
+          body: req, headers
+        })
+        .then((res) => {
+          if (res.ok) {
+            alert('REQUEST SENT')
+          }
+          else if (res.status == 401 && redo) {
+            refreshCookies(() => {
+              headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+              handleSumbitReq(authorID, false)
+            })
+          }
+          else {
+            console.log(res)
+            res.text().then((t) => console.log(t))
+          }
+        })
     }
     else {
-      //Todo handle stuff from other servers
-      /*
-      const username = 'teamgood';
-      const password = 'cmput404';
-      headers = { 'Authorization': 'Basic ' + btoa(username + ":" + password), 'Content-Type': 'application/json' };
-      url = `${authorID}/inbox`
-      */
+      NODES.executeOnRemote((j) => { alert(`Request sent to remote server!`) }, 'POST', `${authorID}/inbox`, false, authorID.slice(0, authorID.indexOf("/author")))
     }
+
     console.log(userID)
     console.log(authorID)
-    let object = authors.find((elem) => elem.id == authorID)
-    let req = JSON.stringify({
-      "type": "Follow",
-      "summary": `${actor.displayName} wants to follow ${object.displayName}`,
-      "actor": actor,
-      "object": object
-    })
-    fetch(url,
-      {
-        method: "POST",
-        body: req, headers
-      })
-      .then((res) => {
-        if (res.ok) {
-          alert('REQUEST SENT')
-        }
-        else if (res.status == 401 && redo) {
-          refreshCookies(() => {
-            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-            handleSumbitReq(authorID, false)
-          })
-        }
-        else {
-          console.log(res)
-          res.text().then((t) => console.log(t))
-        }
-      })
+
   }
   return <>
     <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column", marginLeft: "5%" }} className='p-5'>
@@ -161,7 +196,11 @@ export default function AuthorList(props) {
         </div>
         <div className="row">
           <ul class="list-group">
-            {authors.map((author) => {
+            { //For some reason fetch authors runs twice so we need to fiilter it
+
+              filterArr(authors)
+                .map((author) => {
+
               return <li class="list-group-item" key={author.id}>
 
                 <div className="p-2">{author.displayName}</div>

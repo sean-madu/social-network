@@ -154,7 +154,6 @@ export default function PostView(props) {
       })
 
       .then((res) => {
-        console.log("commet submit", res)
         if (res.ok) {
           setHitSubmit(!hitSubmit)
         }
@@ -247,7 +246,6 @@ export default function PostView(props) {
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
       <small>{username}</small>
     </div>
-    {console.log(props.post.contentType, "type")}
     {props.post.contentType == "text/plain" ? <div>{props.post.content}</div> : <ReactMarkdown>{props.post.content}</ReactMarkdown>}
 
     {props.user && getUserOptions()}
