@@ -67,6 +67,7 @@ export default function Homepage() {
   const [userPosts, setUserPosts] = useState([]);
   const [username, setUsername] = useState("");
   const [posts, setPosts] = useState([]);
+  const [notifs, setNotifs] = useState([]);
 
   const fetchAuthor = () => {
     return fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
@@ -127,15 +128,18 @@ export default function Homepage() {
           return res.json().then((json) => {
             let followRequests = []
             let posts = []
+            let notifs = []
             json.items.forEach((elem) => {
               if (elem.type == "Follow")
                 followRequests.push(elem)
-              if (elem.type == 'post')
+              else if (elem.type == 'post')
                 posts.push(elem)
-
+              else
+                notifs.push(elem)
             })
             setFriendRequests(followRequests)
             setPosts(posts)
+            setNotifs(notifs)
           })
         }
         else {
@@ -228,8 +232,8 @@ export default function Homepage() {
     return (
       <div className="d-flex align-items-center w-100 h-100">
         <div className="nav flex-column nav-pills h-100 " style={{ width: "15%", position: "fixed", left: "0%", top: "30%" }} id="v-pills-tab" role="tablist" aria-orientation="vertical">
-          {makeButton(0, homePic, "Home", 0)}
-          {makeButton(1, inboxPic, "Inbox", 100)}
+          {makeButton(0, homePic, "Home", posts.length)}
+          {makeButton(1, inboxPic, "Inbox", notifs.length)}
           {makeButton(2, friendRequestsPic, "Friend Requests", friendRequests.length)}
           {makeButton(3, createPic, "Create Post", 0)}
           {makeButton(4, navProfilePic, "Profile", 0)}
@@ -242,7 +246,7 @@ export default function Homepage() {
             <Posts posts={posts} />
           </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
-            <NotificationList comments={testNotifs} />
+            <NotificationList comments={notifs} />
           </div>
           <div className={activeNav === 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />

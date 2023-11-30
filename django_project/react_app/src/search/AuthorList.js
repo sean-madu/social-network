@@ -148,16 +148,17 @@ export default function AuthorList(props) {
 
   const handleSumbitReq = (authorID, actor, redo = true) => {
 
+    let object = authors.find((elem) => elem.id == authorID)
+    let req = JSON.stringify({
+      "type": "Follow",
+      "summary": `${actor.displayName} wants to follow ${object.displayName}`,
+      "actor": actor,
+      "object": object
+    })
     if (authorID.startsWith(SERVER_ADDR)) {
       let url = `${authorID}/inbox`
       headers = { 'Authorization': `Bearer ${getCookie("access")}`, 'Content-Type': 'application/json' }
-      let object = authors.find((elem) => elem.id == authorID)
-      let req = JSON.stringify({
-        "type": "Follow",
-        "summary": `${actor.displayName} wants to follow ${object.displayName}`,
-        "actor": actor,
-        "object": object
-      })
+
       fetch(url,
         {
           method: "POST",
@@ -180,7 +181,8 @@ export default function AuthorList(props) {
         })
     }
     else {
-      NODES.executeOnRemote((j) => { alert(`Request sent to remote server!`) }, 'POST', `${authorID}/inbox`, false, authorID.slice(0, authorID.indexOf("/author")))
+      let path = "/service" + authorID.slice(authorID.indexOf("/authors")) + "/inbox"
+      NODES.executeOnRemote((j) => { alert(`Request sent to remote server!`) }, 'POST', path, false, req, object.host)
     }
 
     console.log(userID)
