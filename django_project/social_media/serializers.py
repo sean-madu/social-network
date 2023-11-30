@@ -107,7 +107,7 @@ class FollowerSerializer(serializers.ModelSerializer):
 
 
 
-class Node(serializers.ModelSerializer):
+class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = '__all__'

@@ -3,6 +3,8 @@ import SERVER_ADDR from "../serverAddress";
 import { refreshCookies } from "../getCookies";
 import getCookie from "../getCookies";
 import { json } from "react-router-dom";
+import * as NODES from "../Nodes"
+
 export default function AuthorList(props) {
   const [authors, setAuthors] = useState([]);
   const userID = `${SERVER_ADDR}authors/${new URLSearchParams(window.location.search).get('user')}`

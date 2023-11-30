@@ -31,11 +31,17 @@ export default function Post(props) {
 
 
   const createPostItem = () => {
+    let type = 'text/plain'
+    if (selectedOption == 'markdown') {
+      type = "text/markdown"
+    }
     //TODO handle images
     return {
-      title: "Forgot",
+      title: "Post from team===good",
       content: postContent,
-      unlisted: "False"
+      unlisted: "False",
+      description: "Post description from team===good",
+      contentType: type,
     }
   }
   // Handle textarea input change
@@ -54,13 +60,13 @@ export default function Post(props) {
     setSelectedImage(file);
   };
 
-  const postToInbox = (follower, post, redo = true) => {
-    fetch(`${follower.actor.id}/inbox`,
+  // TODO refactor posting to stream, it is a mess. Get those to be seperate functions 
+  const localInbox = (follower, post, redo = true) => {
+    console.log(post)
+    fetch(`${follower.id}/inbox`,
       {
         method: "POST",
-        body: JSON.stringify(
-          createPostItem()
-        ),
+        body: JSON.stringify(post),
         headers: {
           "Content-type": "application/json; charset=UTF-8",
           'Authorization': `Bearer ${accessCookie}`
@@ -72,13 +78,21 @@ export default function Post(props) {
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            postToInbox(follower, false)
+            localInbox(follower, false)
           })
         }
         else {
           res.json().then((j) => console.log(j, "could not post to inbox of", follower))
         }
       })
+  }
+
+  const postToInbox = (follower, post) => {
+    if (follower.id.startsWith(SERVER_ADDR)) {
+      localInbox(follower, post)
+
+    }
+
   }
   // Handle post button click
   const handlePostClick = () => {
@@ -118,7 +132,7 @@ export default function Post(props) {
 
     }
     else {
-    fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
+      fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
       {
         method: "POST",
         body: JSON.stringify(createPostItem()),
@@ -131,8 +145,8 @@ export default function Post(props) {
 
         if (res.ok) {
           res.json().then((post) => {
-            alert("Post made to followers")
-            fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+            alert("Post made to Stream")
+            fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
               {
                 headers: {
                   'Authorization': `Bearer ${accessCookie}`
@@ -151,7 +165,7 @@ export default function Post(props) {
                 }
                 else if (res.status == 401) {
                   refreshCookies(() => {
-                    fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                    fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
                       {
                         headers: {
                           'Authorization': `Bearer ${accessCookie}`
@@ -162,7 +176,7 @@ export default function Post(props) {
                         if (res.ok) {
                           res.json().then((json) => {
                             json.items.forEach((follower) => {
-                              postToInbox(follower)
+                              postToInbox(follower, post) 
                             })
                           })
                         }
@@ -181,7 +195,7 @@ export default function Post(props) {
         else if (res.status == 401) {
           refreshCookies(() => {
             accessCookie = getCookie("access")
-            fetch(`${SERVER_ADDR}authors/${userID}/posts/`,
+            fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
               {
                 method: "POST",
                 body: JSON.stringify(createPostItem()),
@@ -193,9 +207,9 @@ export default function Post(props) {
                 if (res.ok) {
 
                   res.json().then((post) => {
-                    alert('post made to followers')
+                    alert('post made to stram')
                     console.log("posts like did this")
-                    fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                    fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
                       {
                         headers: {
                           'Authorization': `Bearer ${accessCookie}`
@@ -214,7 +228,7 @@ export default function Post(props) {
                         }
                         else if (res.status == 401) {
                           refreshCookies(() => {
-                            fetch(`${SERVER_ADDR}authors/${userID}/followers/`,
+                            fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
                               {
                                 headers: {
                                   'Authorization': `Bearer ${accessCookie}`

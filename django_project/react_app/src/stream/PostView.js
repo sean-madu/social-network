@@ -26,7 +26,7 @@ export default function PostView(props) {
 
 
   const fetchAuthorDetails = (id, redo = true) => {
-    return fetch(`${id.slice(0, id.indexOf("/posts/"))}`, { headers })
+    return fetch(`${id}`, { headers })
       .then((res) => {
         if (res.ok) {
 
@@ -89,7 +89,7 @@ export default function PostView(props) {
   const [hitSubmit, setHitSubmit] = useState(false);
 
 
-  let authorId = post.id.slice(0, post.id.indexOf("/post/"))
+  let authorId = post.author.id
   fetchAuthorDetails(authorId);
 
 
@@ -247,7 +247,8 @@ export default function PostView(props) {
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
       <small>{username}</small>
     </div>
-    <ReactMarkdown>{props.post.content}</ReactMarkdown>
+    {console.log(props.post.contentType, "type")}
+    {props.post.contentType == "text/plain" ? <div>{props.post.content}</div> : <ReactMarkdown>{props.post.content}</ReactMarkdown>}
 
     {props.user && getUserOptions()}
 

@@ -8,7 +8,7 @@ from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
 
 from .models import Post, Author, Comment, Like, User, Follower, FollowRequest, Node, InboxItem
-from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer, InboxItemSerializer, DummyAuthor
+from .serializers import PostSerializer, AuthorSerializer, CommentSerializer, LikeSerializer, FollowRequestSerializer, FollowerSerializer, InboxItemSerializer, DummyAuthor, NodeSerializer
 
 import bleach
 import urllib.parse
@@ -726,7 +726,18 @@ def InboxView(request, author_key):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
+
+def postToJSON(post):
+    serializer = PostSerializer(post)
+    obj = {}
+    for key in serializer.data:
+        if not key == 'author': 
+            obj[key] = serializer.data[key]
+        else:
+            obj['author'] = AuthorKeyToJson(serializer.data[key])
+    return obj
+
 @swagger_auto_schema(
     methods=['GET'],
     operation_description="Retrieve an author's inbox.",
@@ -757,15 +768,26 @@ def InboxViewAPI(request, author_key):
                     actorJson = AuthorKeyToJson(followrequest.actor.key)
                     objectJson = AuthorKeyToJson(followrequest.object.key)
                     data.append({"actor": actorJson, "object": objectJson, "type": "Follow"})
-
+                if item['type'] == 'post':
+                    itemPost = Post.objects.get(pk=item['post'])
+                    obj = postToJSON(itemPost)
+                    data.append(obj)
             return JsonResponse({"type": "inbox", "author": author.id, "items":  data})
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'POST':
+        print("is post")
+        print(request)
+
+        data = request.data.copy()
+        print(data)
         try:
+  
             author = Author.objects.get(pk = author_key)
-            data = request.data.copy()
+            
+            
             if data['type'] == 'post':
+                   
                     if not 'key'  in data: #only local should send key
                         print("no id")
                         
@@ -777,6 +799,7 @@ def InboxViewAPI(request, author_key):
                         else:
                             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     else:
+                        print("post is in here")
                         post = Post.objects.get(id=data['id'])
                         serializer = PostSerializer(post)
                         #serializer.is_valid()
@@ -785,6 +808,7 @@ def InboxViewAPI(request, author_key):
                             inboxSerializer.save()
                             return Response(serializer.data, status=status.HTTP_201_CREATED)
                     else:
+                        print(inboxSerializer.errors)
                         return Response(inboxSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
             elif data['type'].upper() == 'FOLLOW':
                 object = Author.objects.get(pk = author_key)
@@ -819,3 +843,11 @@ def InboxViewAPI(request, author_key):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        
+# This view returns all the nodes we are connected to currently
+@api_view(['GET'])  
+def NodesList(request):
+    nodes = Node.objects.filter(enabled=True)
+    serializer = NodeSerializer(nodes, many=True)
+    
+    return Response(serializer.data)

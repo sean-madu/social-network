@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI
+from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -60,6 +60,9 @@ urlpatterns = [
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
+    #Nodes
+    path('nodes/', NodesList, name='nodes-list'),
+
     # Auth
     path('auth/', include('social_media.urls')),
 
@@ -70,7 +73,8 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox', InboxViewAPI, name='inbox'),
     path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
-    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>', PostDetail, name='post-detail'),
+
 
 
 
