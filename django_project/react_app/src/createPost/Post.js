@@ -92,9 +92,18 @@ export default function Post(props) {
       localInbox(follower, post)
     }
     else {
+      let path;
+      if (follower.id.indexOf("/service/") == -1) {
+        path = follower.id.slice(follower.id.indexOf("/author/"))
+      }
+
+      else
+        path = follower.id.slice(follower.id.indexOf("/service"))
+      console.log("type err", post)
+      delete post.key
       NODES.executeOnRemote((j) => { console.log(j, "posted to inbox of", follower); },
-        "POST", follower.id + "/inbox",
-        false, JSON.stringify({ post }), follower.id)
+        "POST", path + "/inbox",
+        false, JSON.stringify(post), follower.id)
     }
   }
 
@@ -127,6 +136,7 @@ export default function Post(props) {
         }
       })
   }
+
   const postToStream = (redo = true) => {
     fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
       {
@@ -141,6 +151,7 @@ export default function Post(props) {
 
         if (res.ok) {
           res.json().then((post) => {
+            console.log(post, "post to stream")
             alert("Post made to Stream")
             getFollowers(post)
 

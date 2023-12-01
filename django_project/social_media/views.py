@@ -275,13 +275,19 @@ def PostList(request, author_key):
 
 
         elif request.method == 'POST':
+            print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.key  # Set the author for the new post
+            
             serializer = PostSerializer(data=request.data)
             if serializer.is_valid():
-                print(serializer._validated_data)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                post = serializer._validated_data
+                post = serializer.save()
+                post = serializer.data
+                print(post)
+                post['author'] = AuthorKeyToJson(author.key)
+                print(post)
+                return JsonResponse(post)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -550,6 +556,7 @@ def FollowerList(request, author_key):
         serializer = FollowerSerializer(follower, many=True)
         return  Response(serializer.data)
 
+
 def AuthorKeyToJson(key):
     author = Author.objects.get(pk = key)
     serializer = AuthorSerializer(author)
@@ -796,6 +803,7 @@ def InboxViewAPI(request, author_key):
                         if serializer.is_valid():
                                 print(serializer.validated_data)
                                 post = serializer.save()
+                                
                         else:
                             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     else:

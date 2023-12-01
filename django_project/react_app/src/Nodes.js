@@ -34,7 +34,7 @@ export const executeOnRemote = (callback, method, path, all = false, body = null
 }
 
 const executeRemote = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, body) => {
-  console.log("new node", node.remote_ip)
+  console.log("new node", node.remote_ip, body, "type err")
   let headers = {
     "Content-type": "application/json; charset=UTF-8",
     'Authorization': 'Basic ' + btoa(node.username + ":" + node.password)
