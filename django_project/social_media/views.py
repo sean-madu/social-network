@@ -95,36 +95,6 @@ def AuthorList(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-@permission_classes([CustomPermission])
-@api_view(['GET','POST'])
-def AuthorListAPI(request):
-    if request.method == 'GET':
-        paginator = PageNumberPagination()
-        authors = Author.objects.all().filter(host=BASE_URL).order_by('key') # Need to be ordered to be paginated...
-        result_page = paginator.paginate_queryset(authors, request)
-
-
-        if result_page:
-            serializer = AuthorSerializer(result_page, many=True) 
-            
-            return JsonResponse({"type": "authors", "items" : serializer.data})
-            #uncomment when we need to redo pages
-            # return paginator.get_paginated_response(serializer.data)
-            
-        # If somehow pagination doesn't occur, return the whole list anyways
-        serializer = AuthorSerializer(authors, many=True)
-
-        return Response(serializer.data)
-    
-    elif request.method == 'POST':
-        # bool = IsRemote(request)
-        # if bool:
-        #     return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        serializer = AuthorSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
@@ -207,7 +177,7 @@ def AuthorDetail(request, author_key):
 def AuthorListAPI(request):
     if request.method == 'GET':
         paginator = PageNumberPagination()
-        authors = Author.objects.all().order_by('key') # Need to be ordered to be paginated...
+        authors = Author.objects.filter(host=BASE_URL).order_by('key') # Need to be ordered to be paginated...
         result_page = paginator.paginate_queryset(authors, request)
 
 
