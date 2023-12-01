@@ -14,7 +14,7 @@
 
 import React, { useState, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
-
+import * as NODES from "../Nodes"
 import SERVER_ADDR from '../serverAddress';
 import { refreshCookies } from '../getCookies';
 import getCookie from '../getCookies';
@@ -90,8 +90,74 @@ export default function Post(props) {
   const postToInbox = (follower, post) => {
     if (follower.id.startsWith(SERVER_ADDR)) {
       localInbox(follower, post)
-
     }
+    else {
+      NODES.executeOnRemote((j) => { console.log(j, "posted to inbox of", follower); },
+        "POST", follower.id + "/inbox",
+        false, JSON.stringify({ post }), follower.id)
+    }
+  }
+
+  const getFollowers = (post, redo = true) => {
+    fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessCookie}`
+        }
+      }
+    )
+      .then((res) => {
+        if (res.ok) {
+          alert("posting to followers")
+          res.json().then((json) => {
+            console.log(json, "followers")
+            json.items.forEach((follower) => {
+              postToInbox(follower, post)
+            })
+            props.getPosts()
+          })
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            getFollowers(false)
+          })
+        }
+        else {
+          res.json().then((j) => console.log(j))
+        }
+      })
+  }
+  const postToStream = (redo = true) => {
+    fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
+      {
+        method: "POST",
+        body: JSON.stringify(createPostItem()),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+          'Authorization': `Bearer ${accessCookie}`
+        }
+      })
+      .then((res) => {
+
+        if (res.ok) {
+          res.json().then((post) => {
+            alert("Post made to Stream")
+            getFollowers(post)
+
+          })
+
+          //props.getPosts()
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            postToStream(false)
+          })
+        }
+        else {
+          console.log(res)
+          res.json().then((json) => console.log(json))
+        }
+      })
 
   }
   // Handle post button click
@@ -110,8 +176,7 @@ export default function Post(props) {
         })
         .then((res) => {
           if (res.ok) {
-
-            props.getPosts()
+            res.json((j) => getFollowers(j)) //Post update to inboxes
           }
           else if (res.status == 401) {
             fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
@@ -124,7 +189,7 @@ export default function Post(props) {
                 }
               }).then((res) => {
                 if (res.ok) {
-                  props.getPosts()
+                  res.json((j) => getFollowers(j))
                 }
               })
           }
@@ -132,140 +197,7 @@ export default function Post(props) {
 
     }
     else {
-      fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
-      {
-        method: "POST",
-        body: JSON.stringify(createPostItem()),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-          'Authorization': `Bearer ${accessCookie}`
-        }
-      })
-      .then((res) => {
-
-        if (res.ok) {
-          res.json().then((post) => {
-            alert("Post made to Stream")
-            fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${accessCookie}`
-                }
-              }
-            )
-              .then((res) => {
-                if (res.ok) {
-                  console.log("got followers")
-                  res.json().then((json) => {
-                    console.log(json, "followers")
-                    json.items.forEach((follower) => {
-                      postToInbox(follower, post)
-                    })
-                  })
-                }
-                else if (res.status == 401) {
-                  refreshCookies(() => {
-                    fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
-                      {
-                        headers: {
-                          'Authorization': `Bearer ${accessCookie}`
-                        }
-                      }
-                    )
-                      .then((res) => {
-                        if (res.ok) {
-                          res.json().then((json) => {
-                            json.items.forEach((follower) => {
-                              postToInbox(follower, post) 
-                            })
-                          })
-                        }
-                      })
-                  }
-                  )
-                }
-                else {
-                  res.json().then((j) => console.log(j))
-                }
-              })
-          })
-
-          //props.getPosts()
-        }
-        else if (res.status == 401) {
-          refreshCookies(() => {
-            accessCookie = getCookie("access")
-            fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`,
-              {
-                method: "POST",
-                body: JSON.stringify(createPostItem()),
-                headers: {
-                  "Content-type": "application/json; charset=UTF-8",
-                  'Authorization': `Bearer ${accessCookie}`
-                }
-              }).then((res) => {
-                if (res.ok) {
-
-                  res.json().then((post) => {
-                    alert('post made to stram')
-                    console.log("posts like did this")
-                    fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
-                      {
-                        headers: {
-                          'Authorization': `Bearer ${accessCookie}`
-                        }
-                      }
-                    )
-                      .then((res) => {
-                        if (res.ok) {
-                          console.log("got followers")
-                          res.json().then((json) => {
-                            console.log(json, "followers")
-                            json.forEach((follower) => {
-                              postToInbox(follower, post)
-                            })
-                          })
-                        }
-                        else if (res.status == 401) {
-                          refreshCookies(() => {
-                            fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
-                              {
-                                headers: {
-                                  'Authorization': `Bearer ${accessCookie}`
-                                }
-                              }
-                            )
-                              .then((res) => {
-                                if (res.ok) {
-                                  res.json().then((json) => {
-                                    json.forEach((follower) => {
-                                      postToInbox(follower)
-                                    })
-                                  })
-                                }
-                              })
-                          }
-                          )
-                        }
-                        else {
-                          res.json().then((j) => console.log(j))
-                        }
-                      })
-                  })
-                  //props.getPosts()
-                  //Send post to all followers inbox
-
-                }
-              })
-          })
-        }
-        else {
-          console.log(res)
-          res.json().then((json) => console.log(json))
-        }
-      })
-
-
+      postToStream()
     }
 
   };
