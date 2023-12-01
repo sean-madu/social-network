@@ -790,6 +790,18 @@ def InboxViewAPI(request, author_key):
                    
                     if not 'key'  in data: #only local should send key
                         print("no id")
+                        #Author might not exist yet
+                        try:
+                            postAuthor = Author.objects.get(id=data['author']['id'])
+                            data['author'] =  postAuthor.key
+                        except Author.DoesNotExist:
+                            postAuthorSerializer = DummyAuthor(data=data['author'])
+                            if postAuthorSerializer.is_valid():
+                                postAuthor = postAuthorSerializer.save()
+                                data['author'] = postAuthor.key
+                            else:
+                                print("Could not make dummy author")
+                                return Response(postAuthorSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
                         
                         serializer = PostSerializer(data=data)
                         post = []
