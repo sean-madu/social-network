@@ -65,9 +65,18 @@ class NodeAdminForm(forms.ModelForm):
 class NodeAdmin(admin.ModelAdmin):
     form = NodeAdminForm
 
+class InboxAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.InboxItem
+        fields = '__all__'
+        
+class InboxAdmin(admin.ModelAdmin):
+    form = InboxAdminForm
+
 admin.site.register(models.Author, AuthorAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Like, LikeAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 admin.site.register(models.Follower, FollowAdmin)
 admin.site.register(models.Node, NodeAdmin)
+admin.site.register(models.InboxItem, InboxAdmin)

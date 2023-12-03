@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import SERVER_ADDR from "../serverAddress";
 export default function SignupForm() {
 
+
   //TODO the form tag work with django, fill in the action and method part of form
   let fragments = window.location.hash;
 

@@ -47,7 +47,7 @@ const Posts = (props) => {
               <h5 className="mb-3">Stream</h5>
 
               <ul className="list-group">
-                {getPosts()}
+                {props.posts.length > 0 ? getPosts() : <h1> NO POSTS TO SHOW HERE... </h1>}
               </ul>
 
             </div>

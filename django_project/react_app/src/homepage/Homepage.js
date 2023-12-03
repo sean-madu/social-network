@@ -4,6 +4,7 @@ Homepage of an individual user
 import 'bootstrap/dist/css/bootstrap.css';
 import NotificationList from '../inbox/NotificationList';
 import FriendRequestsList from '../inbox/FriendRequestsList';
+import AuthorList from '../search/AuthorList';
 import ProfilePage from '../profilePage/Profile';
 import { useState, useEffect } from 'react';
 import Post from '../createPost/Post';
@@ -13,8 +14,8 @@ import getCookie from '../getCookies';
 import { refreshCookies } from '../getCookies';
 
 
+
 export default function Homepage() {
-  console.log(getCookie("access"))
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
@@ -59,31 +60,17 @@ export default function Homepage() {
     }
 
   ];
-  let testFollows = [{ id: "1", displayName: "sean" }, { id: "2", displayName: "-250 IQ points" }];
-  let testPosts = [
-    {
-      id: SERVER_ADDR + "author/Obama!/posts/sjdfnskjdfnksjdfn/",
-      content: 'This is the content of post 1.',
-      liked: false,
-      author: 'Obama!',
-    },
-    {
-      id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/",
-      content: 'This is the content of post 2.',
-      liked: false,
-      author: 'Rando123',
-    },
-    // Add more posts as needed
-  ];
 
   //Props
-  const [friendRequests, setFriendRequests] = useState(testFollows); //TODO hook this up with the database
+  const [friendRequests, setFriendRequests] = useState([]); //TODO hook this up with the database
   const [activeNav, setActiveNav] = useState(0);
   const [userPosts, setUserPosts] = useState([]);
   const [username, setUsername] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [notifs, setNotifs] = useState([]);
 
   const fetchAuthor = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}`, { headers })
+    return fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
       .then((res) => {
         if (res.ok) {
           return res.json().then((json) => setUsername(json.displayName))
@@ -108,21 +95,21 @@ export default function Homepage() {
   }
 
   const fetchAuthorPosts = () => {
-    return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+    return fetch(`${SERVER_ADDR}service/authors/${userID}/posts`, { headers })
       .then((res) => {
         if (res.ok) {
-          return res.json().then((json) => setUserPosts(json))
+          return res.json().then((json) => setUserPosts(json.items))
         }
         else {
           if (res.status == 401)
             refreshCookies(
               () => {
                 headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-                return fetch(`${SERVER_ADDR}authors/${userID}/posts`, { headers })
+                return fetch(`${SERVER_ADDR}service/authors/${userID}/posts`, { headers })
                   .then((res) => {
                     if (res.ok) {
                       return res.json().then((json) => {
-                        setUserPosts(json)
+                        setUserPosts(json.items)
                       })
                     }
                   })
@@ -134,10 +121,45 @@ export default function Homepage() {
       })
   }
 
+  const fetchInbox = (redo = true) => {
+    return fetch(`${SERVER_ADDR}service/authors/${userID}/inbox`, { headers })
+      .then((res) => {
+        if (res.ok) {
+          return res.json().then((json) => {
+            let followRequests = []
+            let posts = []
+            let notifs = []
+            json.items.forEach((elem) => {
+              if (elem.type == "Follow")
+                followRequests.push(elem)
+              else if (elem.type == 'post')
+                posts.push(elem)
+              else
+                notifs.push(elem)
+            })
+            setFriendRequests(followRequests)
+            setPosts(posts)
+            setNotifs(notifs)
+          })
+        }
+        else {
+          if (res.status == 401 && redo)
+            refreshCookies(
+              () => {
+                headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+                fetchInbox(false)
+              }
+            )
+
+        }
+
+      })
+  }
   //Effects
   useEffect(() => {
     fetchAuthor();
     fetchAuthorPosts();
+    fetchInbox();
   }, []);
 
 
@@ -202,25 +224,29 @@ export default function Homepage() {
     </svg>
   }
 
+  let searchPic = () => {
+    return <i class="bi bi-search"></i>
+  }
   //Makes the navbar content
   const renderActiveTabs = () => {
     return (
       <div className="d-flex align-items-center w-100 h-100">
         <div className="nav flex-column nav-pills h-100 " style={{ width: "15%", position: "fixed", left: "0%", top: "30%" }} id="v-pills-tab" role="tablist" aria-orientation="vertical">
-          {makeButton(0, homePic, "Home", 0)}
-          {makeButton(1, inboxPic, "Inbox", 100)}
+          {makeButton(0, homePic, "Home", posts.length)}
+          {makeButton(1, inboxPic, "Inbox", notifs.length)}
           {makeButton(2, friendRequestsPic, "Friend Requests", friendRequests.length)}
           {makeButton(3, createPic, "Create Post", 0)}
           {makeButton(4, navProfilePic, "Profile", 0)}
+          {makeButton(5, searchPic, "Find Friends", 0)}
 
         </div>
 
         <div className="tab-content  mx-auto" style={{ width: "85%" }} id="v-pills-tabContent">
           <div className={activeNav === 0 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <Posts posts={testPosts} />
+            <Posts posts={posts} />
           </div>
           <div className={activeNav === 1 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabIndex="0">
-            <NotificationList comments={testNotifs} />
+            <NotificationList comments={notifs} />
           </div>
           <div className={activeNav === 2 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <FriendRequestsList friendRequests={friendRequests} setRequests={setFriendRequests} />
@@ -230,6 +256,9 @@ export default function Homepage() {
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} getAuthor={fetchAuthor} />
+          </div>
+          <div className={activeNav === 5 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
+            <AuthorList />
           </div>
 
         </div>

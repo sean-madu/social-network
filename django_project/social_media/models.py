@@ -6,12 +6,15 @@ from django.core.exceptions import ValidationError
 
 
 class Author(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField(editable=False)
-    host = models.URLField(editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    # proposed username for author, only used for signup, so that admin can easily connect
+    # user with author
+    proposedUser = models.CharField(max_length=225, null=True, blank=True) 
+    key = models.UUIDField(primary_key=True, default=uuid4)
+    id = models.URLField(null=True)
+    host = models.URLField(null=True)
     displayName = models.CharField(max_length=32)
-    url = models.URLField(editable=False)
+    url = models.URLField(null=True)
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
@@ -19,12 +22,23 @@ class Author(models.Model):
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
         if not self.host:
-            self.host = "http://127.0.0.1:8000" #Temp fix while we wait on registering people, also not true of the wider server
+            self.host = "https://cmput404-social-network-401e4cab2cc0.herokuapp.com/" #Temp fix while we wait on registering people, also not true of the wider server
+        if not self.host.endswith("/"):
+            self.host = self.host + "/"
         if not self.url:
-            self.url = self.host + reverse('author-detail', kwargs={'author_key': self.key})
+            host = self.host[0: len(self.host) - 1]
+            self.url = host + reverse('author-detail', kwargs={'author_key': self.key})
+            #get rid of trailing /
+            if self.url.endswith("/"):
+                self.url = self.url[0:len(self.url) - 1] 
         if not self.id:
-            self.id = self.host + reverse('author-detail', kwargs={'author_key': self.key})
+            self.id = host + reverse('author-detail', kwargs={'author_key': self.key})
+            #get rid of trailing /
+            if self.id.endswith("/"):
+                self.id = self.id[0:len(self.id) - 1]
+
         super().save(*args, **kwargs)
+
 
 
     # Change if required...
@@ -54,7 +68,7 @@ class Post(models.Model):
 
 
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    id = models.URLField(editable=False)
+    id = models.URLField(null=True, blank=True)
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
@@ -63,7 +77,7 @@ class Post(models.Model):
     categories = models.JSONField(null=True)
     count = models.IntegerField(default=0)
     comments = models.URLField(editable=False)
-    published = models.DateTimeField(auto_now_add=True, editable=False)
+    published = models.DateTimeField(auto_now_add=True)
     unlisted = models.BooleanField()
     commentsSrc = models.JSONField(null=True)
 
@@ -165,21 +179,31 @@ class Like(models.Model):
 
 class FollowRequest(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    actor = models.URLField()
-    object = models.URLField()
+    actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='actor')
+    object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='object')
     # Actor wants to follow the object
     type = models.CharField(editable=False, default="Follow", max_length=50)
     summary = models.CharField(max_length=255) #WHY WHY WHY
 
 class Follower(models.Model):
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    actor = models.URLField()
-    object = models.URLField()
+    actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
+    object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='followee')
     
 class Node(models.Model):
     remote_ip = models.CharField(primary_key=True, max_length=255)
     remote_user = models.OneToOneField(User, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=True)
+    username = models.CharField(max_length=255, blank=True, null=True)
+    password = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
         return self.remote_ip
+
+class InboxItem(models.Model):
+    key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    follow_request = models.ForeignKey(FollowRequest, blank=True, null=True, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, null=True, blank=True, on_delete=models.CASCADE)
+    type = models.CharField(max_length=225) #Post, like etc
+    # like =models.URLField(blank=True, null=True)
