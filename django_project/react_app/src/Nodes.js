@@ -17,7 +17,6 @@ export const executeOnRemote = (callback, method, path, all = false, body = null
             //Check to see if ip and server host name are similar
             if (all || json[i].remote_ip.indexOf(ip) != -1 || ip.indexOf(json[i].remote_ip) != -1) {
               if (body !== null) {
-                console.log("method", method)
                 executeRemote(json[i], path, method, callback, body)
               }
               else {
@@ -33,13 +32,13 @@ export const executeOnRemote = (callback, method, path, all = false, body = null
     })
 }
 
-const executeRemote = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, body) => {
-  console.log("new node", node.remote_ip, body, "type err")
+const executeRemote = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, body, redo = true) => {
+
   let headers = {
     "Content-type": "application/json; charset=UTF-8",
     'Authorization': 'Basic ' + btoa(node.username + ":" + node.password)
   }
-  console.log(node.remote_ip + path, "url")
+
   fetch(node.remote_ip + path, {
     body: body,
     method: methods,
@@ -51,6 +50,15 @@ const executeRemote = (node = { password: "cmput404", username: "teamgood", remo
         res.json().then((json) => {
           callback(json)
         })
+      }
+      else if (res.status == 500 && redo) {
+        //We can get this depending on how people interpreted the inconsistent api we will retry with or without slash
+        if (path.endsWith("/")) {
+          executeRemote(node, path.slice(0, path.length - 1), methods, callback, body, false)
+        }
+        else {
+          executeRemote(node, path + "/", methods, callback, body, false)
+        }
       }
       else {
         console.log(res)
@@ -64,13 +72,13 @@ const executeRemote = (node = { password: "cmput404", username: "teamgood", remo
 }
 
 
-const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback) => {
-  console.log("new node", node.remote_ip)
+const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, redo = true) => {
+
   let headers = {
     "Content-type": "application/json; charset=UTF-8",
     'Authorization': 'Basic ' + btoa(node.username + ":" + node.password)
   }
-  console.log(node.remote_ip + path, "url")
+
   fetch(node.remote_ip + path, {
     method: methods,
     headers
@@ -81,6 +89,15 @@ const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood"
         res.json().then((json) => {
           callback(json)
         })
+      }
+      else if (res.status == 500 && redo) {
+        //We can get this depending on how people interpreted the inconsistent api we will retry with or without slash
+        if (path.endsWith("/")) {
+          executeRemoteNoBody(node, path.slice(0, path.length - 1), methods, callback, false)
+        }
+        else {
+          executeRemoteNoBody(node, path + "/", methods, callback, false)
+        }
       }
       else {
         console.log("could not fetch", node.remote_ip, node.method)

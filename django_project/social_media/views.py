@@ -14,7 +14,7 @@ import bleach
 import urllib.parse
 
 
-BASE_URL = 'http://127.0.0.1:8000/'
+BASE_URL = 'https://cmput404-social-network-401e4cab2cc0.herokuapp.com/'
 
 # For authentication 
 from django.contrib.auth import authenticate, login
@@ -779,7 +779,8 @@ def InboxViewAPI(request, author_key):
                             else:
                                 print("Could not make dummy author")
                                 return Response(postAuthorSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                        
+                        if not 'unlisted' in data:
+                            data['unlisted'] = "False"
                         serializer = PostSerializer(data=data)
                         post = []
                         if serializer.is_valid():
