@@ -348,6 +348,26 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def PostImage(request, author_key, post_key):
+    try:
+        author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        try:
+            post = Post.objects.get(key=post_key, author=author)  # Retrieve the post by post_key and author
+            try:
+                if post.contentType.startswith('image/'):
+                    return Response(post.content)
+                else:
+                    return Response("Post is not an image", status=status.HTTP_404_NOT_FOUND)
+            except:
+                return Response("Post object error",status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        except Post.DoesNotExist:
+            return Response("Post does not exist",status=status.HTTP_404_NOT_FOUND)
+    
+    except Author.DoesNotExist:
+        return Response("Author does not exist",status=status.HTTP_404_NOT_FOUND)
+
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
     methods=['GET'],
