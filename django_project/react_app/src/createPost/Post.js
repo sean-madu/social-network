@@ -55,7 +55,7 @@ export default function Post(props) {
     }
     else {
       unlisted = "True"
-      visibility = "PUBLIC"
+      visibility = "FRIENDS"
       notify = false
     }
     //TODO handle images
@@ -127,6 +127,36 @@ export default function Post(props) {
     }
   }
 
+  const getFriends = (post, redo = true) => {
+    fetch(`${SERVER_ADDR}service/authors/${userID}/friends`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessCookie}`
+        }
+      }
+    )
+      .then((res) => {
+        if (res.ok) {
+          alert("posting to friends")
+          res.json().then((json) => {
+            console.log(json, "friends")
+            json.items.forEach((follower) => {
+              postToInbox(follower, post)
+            })
+            props.getPosts()
+          })
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            getFriends(false)
+          })
+        }
+        else {
+          res.json().then((j) => console.log(j))
+        }
+      })
+  }
+
 
   const getFollowers = (post, redo = true) => {
     fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
@@ -175,13 +205,13 @@ export default function Post(props) {
             console.log(post, "post to stream")
             alert("Post made to Stream")
             if (notify && friends) {
-
+              getFriends(post)
             }
             else if (notify && !friends) {
               getFollowers(post)
             }
             else {
-              alert(`Your post can be shared with this link: ${post.id}`)
+              alert(`Your post can be shared with this link: ${post.id} if you made it unlisted`)
             }
           })
 
@@ -215,7 +245,9 @@ export default function Post(props) {
         })
         .then((res) => {
           if (res.ok) {
+            props.getPosts()
             res.json((j) => getFollowers(j)) //Post update to inboxes
+
           }
           else if (res.status == 401) {
             fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
@@ -232,12 +264,14 @@ export default function Post(props) {
                 }
               })
           }
+          else {
+            console.log(res)
+            res.text().then((t) => { console.log(t) })
+          }
         })
 
     }
     else {
-      //console.log(createPostItem())
-
       postToStream()
     }
 

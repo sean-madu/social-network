@@ -48,6 +48,7 @@ export default function PostView(props) {
           console.log(res);
         }
       })
+      .catch((err) => console.log(err, props.post))
   }
 
   const fetchComments = (post_id, redo = true) => {

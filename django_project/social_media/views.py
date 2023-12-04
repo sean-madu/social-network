@@ -463,7 +463,12 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
                 likes = Like.objects.filter(post=post)
             
             serializer = LikeSerializer(likes, many=True)
-            return Response(serializer.data)
+            items = []
+            for item in serializer.data:
+                item['author'] = AuthorKeyToJson(item['author'])
+                items.append(item)
+
+            return JsonResponse({"type" : "likes", "items" : items})
     
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -493,7 +498,11 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
 def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)
     serializer = LikeSerializer(likes, many=True)
-    return Response(serializer.data)
+    items = []
+    for item in serializer.data:
+        item['author'] = AuthorKeyToJson(item['author'])
+        items.append(item)
+    return JsonResponse({"type":"liked", "items": items})
 
 @swagger_auto_schema(
     methods=['GET'],
@@ -553,10 +562,18 @@ def FriendsList(request, author_key):
     author = Author.objects.get(pk=author_key)
     followers = Follower.objects.filter(object=author)
     following = Follower.objects.filter(actor=author)
+    erserializer = FollowerSerializer(followers, many=True)
+    ingserializer = FollowerSerializer(following, many=True)
     # Find the intersection of the two sets to get the friends
-    friends = [f for f in followers if f.actor_id in following.values_list('object_id', flat=True)]
-    serializer = FollowerSerializer(friends, many=True)
-    return Response(serializer.data)
+    friends = []
+    # n^2 i know
+    for follower in erserializer.data:
+        for following in ingserializer.data:
+            if following['object'] == follower['actor']:
+                json = AuthorKeyToJson(following['object'])
+                if friends.count(json) == 0:
+                    friends.append(json)
+    return JsonResponse({"items": friends, "type":"friends"})
 
 @swagger_auto_schema(
     methods=['GET'],
@@ -773,7 +790,7 @@ def InboxViewAPI(request, author_key):
             author = Author.objects.get(pk = author_key)
             
             
-            if data['type'] == 'post':
+            if data['type'].upper() == 'POST':
                    
                     if not 'key'  in data: #only local should send key
                         print("no id")
@@ -832,6 +849,29 @@ def InboxViewAPI(request, author_key):
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            elif data['type'].upper() == "LIKE":
+                try:
+                    author = Author.objects.get(id = data['author']['id'])
+                except Author.DoesNotExist:
+                    serializer = DummyAuthor(data=data['author'])
+                    if serializer.is_valid():
+                        author = serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                data['author'] = author
+                if "/comment" not in data['object']:
+                    post = Post.objects.get(id=data['object'])
+                    data['post'] = post
+                else:
+                    comment = Comment.objects.get(id=data['object'])
+                    data['comment'] = comment
+                serializer = LikeSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except Author.DoesNotExist:

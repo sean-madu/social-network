@@ -72,15 +72,17 @@ export default function Homepage() {
                       return res.json().then((json) => {
                         setUsername(json.displayName)
                         let github = json.github.slice(json.github.lastIndexOf("/"))
-                        alert(github)
                         fetch(`https://api.github.com/users/${github}/events`)
                           .then((res) => {
                             if (res.ok) {
                               res.json().then((j) => {
-                                alert(j)
-                              })
-                            }
-                          }) 
+                              setGithubContent(j.slice(0, 3))
+                            })
+                          }
+                          else {
+                            console.log(res, "NO GITHUT")
+                          }
+                        })
                       })
                     }
                   })

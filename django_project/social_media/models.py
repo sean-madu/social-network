@@ -85,7 +85,7 @@ class Post(models.Model):
     def generate_origin_url(self):
         current_host = self.author.host
         author_key= self.author.key
-        url = current_host.lstrip("/") + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
+        url = current_host.strip("/") + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
         return url
 
 
@@ -129,7 +129,7 @@ class Comment(models.Model):
         current_host = self.author.host
         author_key= self.post.author.key
         post_key = self.post.key
-        url = current_host.lstrip("/") + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
+        url = current_host.strip("/") + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
         return url
 
 
@@ -155,7 +155,7 @@ class Like(models.Model):
     def generate_origin_url(self):
         current_host = self.author.host
         author_key = self.author.key
-        url = current_host.lstrip("/")
+        url = current_host.strip("/")
 
         if self.comment:  # If associated with a comment
             url += reverse('comment-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key),'comment_key': str(self.comment.key)})
