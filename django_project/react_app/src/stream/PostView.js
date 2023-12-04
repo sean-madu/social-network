@@ -133,6 +133,10 @@ export default function PostView(props) {
             handleDelete(postId, false)
           })
         }
+        else {
+          console.log(res)
+          res.text().then((t) => { console.log(post); console.log(t) })
+        }
       })
     delete headers["Content-type"]
   }

@@ -85,7 +85,7 @@ class Post(models.Model):
     def generate_origin_url(self):
         current_host = self.author.host
         author_key= self.author.key
-        url = current_host + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
+        url = current_host.lstrip("/") + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
         return url
 
 
@@ -96,7 +96,7 @@ class Post(models.Model):
         if not self.source:
             self.source = self.generate_origin_url()
         if not self.comments:
-            self.comments = self.generate_origin_url() + "comments"
+            self.comments = self.generate_origin_url() + "/comments"
         if not self.id:
             self.id = self.generate_origin_url()
         super().save(*args, **kwargs)
