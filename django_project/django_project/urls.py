@@ -39,24 +39,24 @@ urlpatterns = [
     path("homepage", views.index, name="index"),
     path("register/", views.index, name="index"),
     
-    # Authors
+    #Local Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     path('authors/<uuid:author_key>/followers/', FollowerList, name="follower-list"),
     path('authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetail, name="follower-detail"),
     path('user/<str:username>/', getAuthorFromUser, name="get-author"),
     path('authors/<uuid:author_key>/inbox/', InboxView, name='inbox'),
-    # Posts
+    # Local Posts
     path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
-    # Comments
+    # Local Comments
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
-    # Likes
+    # Local Likes
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
-
+    
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
@@ -66,7 +66,7 @@ urlpatterns = [
     # Auth
     path('auth/', include('social_media.urls')),
 
-    # Api
+    #Remote authors
     path('service/authors/', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
@@ -75,7 +75,7 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
 
-    #Api with no slash
+    #Remote authors (No slash)
     path('service/authors', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers', FollowerListAPI, name="follower-list"),

@@ -35,6 +35,9 @@ export default function Post(props) {
     if (selectedOption == 'markdown') {
       type = "text/markdown"
     }
+    else if (selectedOption == 'image') {
+      type = ""
+    }
     //TODO handle images
     return {
       title: "Post from team===good",
@@ -231,8 +234,32 @@ export default function Post(props) {
               >
                 <option value="plain">Plain Text</option>
                 <option value="markdown">Markdown</option>
+                <option value="image">Image</option>
               </select>
             </div>
+
+            {/* Privacy Selection */}
+            <div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" value="option1" checked></input>
+                <label class="form-check-label" for="exampleRadios1">
+                  PUBLIC
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="option2"></input>
+                <label class="form-check-label" for="exampleRadios2">
+                  PRIVATE
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="option2"></input>
+                <label class="form-check-label" for="exampleRadios2">
+                  UNLISTED
+                </label>
+              </div>
+            </div>
+
 
             {/* Textarea for post content */}
             <div className="mb-3 d-flex">
