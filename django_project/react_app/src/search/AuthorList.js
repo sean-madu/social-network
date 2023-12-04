@@ -206,7 +206,7 @@ export default function AuthorList(props) {
                   }
                   else { setViewing(author.id) }
                 }} className="btn btn-primary m-2"> SEE PUBLIC POSTS </button>
-                {viewing === author.id && <Posts posts={posts} proxy={true} ></Posts>}
+                {viewing === author.id && <Posts posts={posts} ></Posts>}
               </li>
             })}
           </ul>
