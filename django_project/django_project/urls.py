@@ -39,9 +39,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
-
-    # Register
-    path("register/", Register, name="register"),
+    path("register/", views.index, name="register"),
     
     #Local Authors
     path('authors/', AuthorList, name='author-list'),
@@ -71,6 +69,8 @@ urlpatterns = [
     # Auth
     path('auth/', include('social_media.urls')),
 
+    #Register
+    path('service/register/', Register, name="register"),
     #Remote authors
     path('service/authors/', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),

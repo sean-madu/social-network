@@ -840,7 +840,7 @@ def InboxViewAPI(request, author_key):
                             obj[key] = serializer.data[key]
                         else:
                             obj['author'] = authorJson
-                    data.append({obj})
+                    data.append(obj)
 
             return JsonResponse({"type": "inbox", "author": author.id, "items":  data})
         except Author.DoesNotExist:
@@ -924,17 +924,22 @@ def InboxViewAPI(request, author_key):
                         author = serializer.save()
                     else:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                data['author'] = author
+                data['author'] = author.key
                 if "/comment" not in data['object']:
                     post = Post.objects.get(id=data['object'])
-                    data['post'] = post
+                    data['post'] = post.key
                 else:
                     comment = Comment.objects.get(id=data['object'])
-                    data['comment'] = comment
+                    data['comment'] = comment.key
                 serializer = LikeSerializer(data=data)
                 if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    like = serializer.save()
+                    serializer = InboxItemSerializer(data={"author": author.key, "like":like.key, "type":"Like"})
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
 

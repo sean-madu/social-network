@@ -137,12 +137,58 @@ export default function PostView(props) {
     setCommentContent(e.target.value);
   };
 
-  const handleHeartClick = (postId) => {
-    props.setPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.id === postId ? { ...post, liked: !post.liked } : post
-      )
-    );
+  const handleHeartClick = (postId, redo = true) => {
+    if (postId.startsWith(SERVER_ADDR)) {
+      //Fetch author and send a like to inbox
+      let headers = { 'Authorization': "Bearer " + getCookie("access") }
+      headers["Content-type"] = "application/json; charset=UTF-8"
+      let userID = `${new URLSearchParams(window.location.search).get('user')}`
+      fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
+        .then((res) => {
+          if (res.ok) {
+            res.json().then((author) => {
+              let url = postId.slice(0, postId.indexOf("/posts/"))
+              url += "/inbox/"
+              fetch(url,
+                {
+                  headers: {
+                    'Authorization': "Bearer " + getCookie("access"),
+                    "Content-type": "application/json; charset=UTF-8"
+                  },
+                  body: JSON.stringify({
+                    summary: "someone from team good liked your post",
+                    type: "Like",
+                    author: author,
+                    object: postId,
+                  }),
+                  method: "POST"
+                })
+                .then((res) => {
+                  if (res.ok) {
+                    alert("Like sent!")
+                  }
+                  else if (res.status == 401 && redo) {
+                    handleHeartClick(postId, false)
+                  }
+                  else {
+                    res.text().then((t) => { console.log(t) })
+                  }
+                })
+            })
+          }
+          else if (res.status == 401 && redo) {
+            refreshCookies(() => {
+              handleHeartClick(postId, false)
+            })
+          }
+          else {
+            res.text().then((t) => console.log(t, "could not get author for comment post"))
+          }
+        })
+
+    } else {
+
+    }
   };
 
 

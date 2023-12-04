@@ -74,7 +74,11 @@ export default function Homepage() {
                     if (res.ok) {
                       return res.json().then((json) => {
                         setUsername(json.displayName)
-                        let github = json.github.slice(json.github.lastIndexOf("/"))
+                        let github
+                        if (json.github)
+                          github = json.github.slice(json.github.lastIndexOf("/"))
+                        else
+                          github = ""
                         fetch(`https://api.github.com/users/${github}/events`)
                           .then((res) => {
                             if (res.ok) {
@@ -131,6 +135,7 @@ export default function Homepage() {
             let followRequests = []
             let posts = []
             let notifs = []
+
             json.items.forEach((elem) => {
               if (elem.type == "Follow")
                 followRequests.push(elem)
@@ -152,8 +157,12 @@ export default function Homepage() {
                 fetchInbox(false)
               }
             )
+          else {
+            res.text().then((t) => console.log(t))
+          }
 
         }
+
 
       })
   }
