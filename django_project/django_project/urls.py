@@ -18,8 +18,8 @@ from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
 from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList, FriendsList
-from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, PostImage, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList
+from social_media.views import PostImage, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
+from social_media.views import Register
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -39,7 +39,9 @@ urlpatterns = [
     path('', views.index, name='index'),
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
-    path("register/", views.index, name="index"),
+
+    # Register
+    path("register/", Register, name="register"),
     
     #Local Authors
     path('authors/', AuthorList, name='author-list'),

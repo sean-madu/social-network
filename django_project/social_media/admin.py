@@ -76,6 +76,8 @@ class InboxAdminForm(forms.ModelForm):
 class InboxAdmin(admin.ModelAdmin):
     form = InboxAdminForm
 
+
+#Deploy models
 admin.site.register(models.Author, AuthorAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Like, LikeAdmin)

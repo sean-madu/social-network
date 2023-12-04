@@ -82,6 +82,8 @@ class Post(models.Model):
     commentsSrc = models.JSONField(null=True)
 
 
+
+    # generate URL for the post
     def generate_origin_url(self):
         current_host = self.author.host.rstrip('/')
         author_key= self.author.key
@@ -140,6 +142,7 @@ class Comment(models.Model):
         
 
 class Like(models.Model):
+    #author, post, comment, key, id, object
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True)
@@ -178,6 +181,8 @@ class Like(models.Model):
         return f"{self.author.displayName} liked {self.object}"
 
 class FollowRequest(models.Model):
+    #key, actor, object, type, summary
+
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='actor')
     object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='object')
@@ -186,11 +191,13 @@ class FollowRequest(models.Model):
     summary = models.CharField(max_length=255) #WHY WHY WHY
 
 class Follower(models.Model):
+    #key, actor, object
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
     object = models.ForeignKey(Author, on_delete=models.CASCADE,related_name='followee')
     
 class Node(models.Model):
+    #remote_ip, remote_user, enables, username, password
     remote_ip = models.CharField(primary_key=True, max_length=255)
     remote_user = models.OneToOneField(User, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=True)
@@ -201,6 +208,7 @@ class Node(models.Model):
         return self.remote_ip
 
 class InboxItem(models.Model):
+    #key, author, follow_request, post, type
     key = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     follow_request = models.ForeignKey(FollowRequest, blank=True, null=True, on_delete=models.CASCADE)
