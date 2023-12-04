@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import Post from "../createPost/Post";
 import SERVER_ADDR from "../serverAddress";
 import Comment from "./Comment";
-
+import * as NODES from "../Nodes"
 import ReactMarkdown from 'react-markdown';
 import { refreshCookies } from "../getCookies";
 import getCookie from "../getCookies";
@@ -26,7 +26,8 @@ export default function PostView(props) {
 
 
   const fetchAuthorDetails = (id, redo = true) => {
-    return fetch(`${id}`, { headers })
+    if (id.startsWith(SERVER_ADDR)) {
+      return fetch(`${id}`, { headers })
       .then((res) => {
         if (res.ok) {
 
@@ -49,20 +50,36 @@ export default function PostView(props) {
         }
       })
       .catch((err) => console.log(err, props.post))
+    }
+    else {
+      return NODES.executeOnRemote((json) => { setUsername(json.displayName) },
+        "GET", id, false, null, id)
+    }
+
   }
 
   const fetchComments = (post_id, redo = true) => {
+    if (post_id.endsWith("/")) {
+      post_id = post_id.substring(0, post_id.length - 1)
+    }
+    if (post_id.startsWith(SERVER_ADDR)) {
 
-    return fetch(`${post_id}comments/`, { headers })
+      return fetch(`${post_id}/comments/`, { headers })
       .then((res) => {
         if (res.ok) {
           res.json().then((json) => {
-            setComments(json)
+            if (json.items !== undefined) {
+              setComments(json.items)
+            }
+            else {
+              setComments(json)
+            }
+
           })
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
+            headers = { 'Authorization': "Bearer " + getCookie("access") }
             fetchComments(post_id, false)
           })
         }
@@ -74,6 +91,24 @@ export default function PostView(props) {
           })
         }
       })
+    }
+    else {
+      return NODES.executeOnRemote((json) => {
+        console.log(json, "Remote comment")
+        if (json.items !== undefined) {
+          setComments(json.items)
+        }
+        else if (json.comments !== undefined) {
+          setComments(json.comments)
+        }
+        else {
+          setComments(json)
+        }
+
+      }, "GET", `${post_id}/comments/`, false
+        , null, post_id)
+    }
+
   }
 
   let post = props.post;
@@ -115,6 +150,7 @@ export default function PostView(props) {
   const handleDelete = (postId, redo = true) => {
 
     headers["Content-type"] = "application/json; charset=UTF-8"
+
     fetch(`${post.id}`,
       {
         method: "DELETE",
@@ -130,7 +166,7 @@ export default function PostView(props) {
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
+            headers = { 'Authorization': "Bearer " + getCookie("access") }
             handleDelete(postId, false)
           })
         }
@@ -140,39 +176,87 @@ export default function PostView(props) {
         }
       })
     delete headers["Content-type"]
+
   }
+
 
   const handleEdit = (postId) => {
     setEditing(!editing);
   }
 
-  const handleCommentSubmit = (redo = true) => {
+  const getAuthorJson = (post_id, redo = true) => {
+    let headers = { 'Authorization': "Bearer " + getCookie("access") }
     headers["Content-type"] = "application/json; charset=UTF-8"
-    fetch(`${post.id}comments/`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          "comment": commentContent,
-          "author": `${new URLSearchParams(window.location.search).get('user')}`
-        }),
-        headers
-      })
-
+    let userID = `${new URLSearchParams(window.location.search).get('user')}`
+    fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
       .then((res) => {
         if (res.ok) {
-          setHitSubmit(!hitSubmit)
+          res.json().then((author) => {
+            fetch(`${post_id}/comments/`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  "comment": commentContent,
+                  "author": author
+                }),
+                headers
+              })
+
+              .then((res) => {
+                if (res.ok) {
+                  alert("Comment submitted")
+                  setHitSubmit(!hitSubmit)
+                }
+                else if (res.status == 401 && redo) {
+                  refreshCookies(() => {
+                    headers = { 'Authorization': "Bearer " + getCookie("access") }
+                    handleCommentSubmit(false)
+
+                  })
+                }
+                else {
+                  res.text().then((json) => console.log(json))
+                }
+              })
+          }
+          )
         }
         else if (res.status == 401 && redo) {
           refreshCookies(() => {
-            headers = { 'Authorization': getCookie("access") }
-            handleCommentSubmit(false)
-
+            getAuthorJson(post_id, false)
           })
         }
         else {
-          res.json().then((json) => console.log(json))
+          res.text().then((t) => console.log(t, "could not get author for comment post"))
         }
       })
+  }
+
+  //TODO post to inboxes instead?
+  const handleCommentSubmit = (redo = true) => {
+    let post_id = post.id
+    if (post_id.endsWith("/")) {
+      post_id = post_id.substring(0, post_id.length - 1)
+    }
+    headers["Content-type"] = "application/json; charset=UTF-8"
+    console.log(post_id)
+    if (post_id.startsWith(SERVER_ADDR)) {
+      console.log("started")
+      getAuthorJson(post_id)
+    }
+    else {
+      let author_id = authorId
+      if (author_id.endsWith("/"))
+        authorId = authorId.substring(0, authorId.length - 1)
+      NODES.executeOnRemote((json) => { setHitSubmit(!hitSubmit); alert(`Sent to remote inbox!`) }, 'POST', `${author_id}/inbox/`,
+        false, JSON.stringify({
+          "type": "comment",
+          "commentType": "text/plain",
+          "comment": commentContent,
+          "author": `${new URLSearchParams(window.location.search).get('user')}`
+        }), post.id)
+    }
+
     delete headers["Content-type"]
   }
 

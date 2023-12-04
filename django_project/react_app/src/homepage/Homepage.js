@@ -42,8 +42,11 @@ export default function Homepage() {
         if (res.ok) {
           return res.json().then((json) => {
             setUsername(json.displayName)
-
-            let github = json.github.slice(json.github.lastIndexOf("/"))
+            let github
+            if (json.github)
+              github = json.github.slice(json.github.lastIndexOf("/"))
+            else
+              github = ""
             if (github != "") {
               github = github.replaceAll("/", "")
 

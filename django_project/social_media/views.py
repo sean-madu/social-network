@@ -419,13 +419,16 @@ def CommentList(request, author_key, post_key):
                     for comment in serializer.data:
                         comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
                         comment['author'] = AuthorKeyToJson(comment['author'])
-                    return Response(serializer.data)
+                    return JsonResponse({"items":serializer.data, "comments": serializer.data, "type":"comments"})
                 if request.method == 'POST':
                     # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
                     # Handle POST requests to create a new post associated with the author
-                    #request.data['author'] = author.key  # Set the author for the new post # Require author in post
+                    author = Author.objects.get(id = request.data['author']['id'])
+                    request.data['author'] = author.key  # Set the author for the new post # Require author in post
         
                     request.data['post'] = post.key
+                    data = request.data.copy()
+   
                     serializer = CommentSerializer(data=request.data)
                     if serializer.is_valid():
                         serializer.save()
@@ -856,7 +859,7 @@ def InboxViewAPI(request, author_key):
             if data['type'].upper() == 'POST':
                    
                     if not 'key'  in data: #only local should send key
-                        print("no id")
+                        print("no key")
                         #Author might not exist yet
                         try:
                             postAuthor = Author.objects.get(id=data['author']['id'])
