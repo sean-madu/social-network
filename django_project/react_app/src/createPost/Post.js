@@ -92,17 +92,13 @@ export default function Post(props) {
       localInbox(follower, post)
     }
     else {
-      let path;
-      if (follower.id.indexOf("/service/") == -1) {
-        path = follower.id.slice(follower.id.indexOf("/author/"))
+      if (follower.id.endsWith("/")) {
+        follower.id = follower.id.slice(0, follower.id.length - 1)
       }
-
-      else
-        path = follower.id.slice(follower.id.indexOf("/service"))
-      console.log("type err", post)
+      let path = follower.id + "/inbox/"
       delete post.key
       NODES.executeOnRemote((j) => { console.log(j, "posted to inbox of", follower); },
-        "POST", path + "/inbox",
+        "POST", path,
         false, JSON.stringify(post), follower.id)
     }
   }
@@ -208,6 +204,8 @@ export default function Post(props) {
 
     }
     else {
+      //console.log(createPostItem())
+
       postToStream()
     }
 

@@ -32,14 +32,18 @@ export const executeOnRemote = (callback, method, path, all = false, body = null
     })
 }
 
-const executeRemote = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, body, redo = true) => {
+export const executeRemote = (node = { password: "cmput404", username: "teamgood", remote_ip: "https://www.google.com" }, path, methods, callback, body, redo = true) => {
 
   let headers = {
     "Content-type": "application/json; charset=UTF-8",
     'Authorization': 'Basic ' + btoa(node.username + ":" + node.password)
   }
+  let url = node.remote_ip + path
+  if (path.indexOf(node.remote_ip) != -1) {
+    url = path
+  }
 
-  fetch(node.remote_ip + path, {
+  fetch(url, {
     body: body,
     method: methods,
     headers
@@ -63,7 +67,7 @@ const executeRemote = (node = { password: "cmput404", username: "teamgood", remo
       else {
         console.log(res)
         res.text().then((t) => console.log(t))
-        console.log("could not fetch", node.remote_ip, methods)
+        console.log("could not fetch (new)", node.remote_ip, methods, url)
       }
     })
     .catch((err) => {
@@ -78,8 +82,12 @@ const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood"
     "Content-type": "application/json; charset=UTF-8",
     'Authorization': 'Basic ' + btoa(node.username + ":" + node.password)
   }
-
-  fetch(node.remote_ip + path, {
+  console.log(node, "node log")
+  let url = node.remote_ip + path
+  if (path.indexOf(node.remote_ip) != -1) {
+    url = path
+  }
+  fetch(url, {
     method: methods,
     headers
 
@@ -100,7 +108,9 @@ const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood"
         }
       }
       else {
-        console.log("could not fetch", node.remote_ip, node.method)
+        console.log(res)
+        res.text().then((t) => console.log(t))
+        console.log("could not fetch (new body service)", node.remote_ip, methods, url)
       }
     })
     .catch((err) => {
