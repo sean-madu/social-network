@@ -525,7 +525,7 @@ def FollowerList(request, author_key):
         follower = Follower.objects.filter(object=author)
         serializer = FollowerSerializer(follower, many=True)
         return  Response(serializer.data)
-
+    
 
 def AuthorKeyToJson(key):
     author = Author.objects.get(pk = key)
@@ -548,6 +548,16 @@ def FollowerListAPI(request, author_key):
             followers.append(AuthorKeyToJson(item['actor']))
         return  JsonResponse({"type": "followers", "items" : followers})
     
+@api_view(['GET'])
+def FriendsList(request, author_key):
+    author = Author.objects.get(pk=author_key)
+    followers = Follower.objects.filter(object=author)
+    following = Follower.objects.filter(actor=author)
+    # Find the intersection of the two sets to get the friends
+    friends = [f for f in followers if f.actor_id in following.values_list('object_id', flat=True)]
+    serializer = FollowerSerializer(friends, many=True)
+    return Response(serializer.data)
+
 @swagger_auto_schema(
     methods=['GET'],
     operation_description="Retrieve an author-follower relationship.",

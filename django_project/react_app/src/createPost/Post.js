@@ -28,23 +28,44 @@ export default function Post(props) {
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
-
+  let notify = true
+  let friends = true
 
   const createPostItem = () => {
     let type = 'text/plain'
+    let unlisted = "False"
+    let visibility = "PUBLIC"
     if (selectedOption == 'markdown') {
       type = "text/markdown"
+
     }
     else if (selectedOption == 'image') {
       type = ""
+    }
+
+    if (document.getElementById("publicPost").checked) {
+      visibility = "PUBLIC"
+      notify = true
+      friends = false
+    }
+    else if (document.getElementById("privatePost").checked) {
+      visibility = "FRIENDS"
+      notify = true
+      friends = true
+    }
+    else {
+      unlisted = "True"
+      visibility = "PUBLIC"
+      notify = false
     }
     //TODO handle images
     return {
       title: "Post from team===good",
       content: postContent,
-      unlisted: "False",
+      unlisted: unlisted,
       description: "Post description from team===good",
       contentType: type,
+      visibility: visibility,
     }
   }
   // Handle textarea input change
@@ -106,6 +127,7 @@ export default function Post(props) {
     }
   }
 
+
   const getFollowers = (post, redo = true) => {
     fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
       {
@@ -152,8 +174,15 @@ export default function Post(props) {
           res.json().then((post) => {
             console.log(post, "post to stream")
             alert("Post made to Stream")
-            getFollowers(post)
+            if (notify && friends) {
 
+            }
+            else if (notify && !friends) {
+              getFollowers(post)
+            }
+            else {
+              alert(`Your post can be shared with this link: ${post.id}`)
+            }
           })
 
           //props.getPosts()
@@ -241,19 +270,19 @@ export default function Post(props) {
             {/* Privacy Selection */}
             <div>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" value="option1" checked></input>
+                <input class="form-check-input" type="radio" name="exampleRadios" id="publicPost" value="option1" checked></input>
                 <label class="form-check-label" for="exampleRadios1">
                   PUBLIC
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="option2"></input>
+                <input class="form-check-input" type="radio" name="exampleRadios" id="privatePost" value="option2"></input>
                 <label class="form-check-label" for="exampleRadios2">
                   PRIVATE
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="option2"></input>
+                <input class="form-check-input" type="radio" name="exampleRadios" id="unlistedPost" value="option2"></input>
                 <label class="form-check-label" for="exampleRadios2">
                   UNLISTED
                 </label>

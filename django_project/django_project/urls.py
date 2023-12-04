@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList
+from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList, FriendsList
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -56,7 +56,7 @@ urlpatterns = [
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
-    
+
     # Swagger Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 
@@ -70,6 +70,7 @@ urlpatterns = [
     path('service/authors/', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
+        path('service/authors/<uuid:author_key>/friends/', FriendsList, name="friends-list"),
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox/', InboxViewAPI, name='inbox'),
     path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
@@ -79,6 +80,7 @@ urlpatterns = [
     path('service/authors', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers', FollowerListAPI, name="follower-list"),
+    path('service/authors/<uuid:author_key>/friends', FriendsList, name="friends-list"),
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox', InboxViewAPI, name='inbox'),
     path('service/authors/<uuid:author_key>/posts', PostList, name='post-list'),
