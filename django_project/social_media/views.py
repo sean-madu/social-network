@@ -390,30 +390,34 @@ def PostImage(request, author_key, post_key):
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
-        #author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        # author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
         try:
             post = Post.objects.get(key=post_key)
-            if request.method == 'GET':
-                comments = Comment.objects.filter(post=post)
-
-                serializer = CommentSerializer(comments, many=True)
-                # Sanitize HTML content in the list view
-                for comment in serializer.data:
-                    comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
-                return Response(serializer.data)
-            if request.method == 'POST':
-                # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
-                # Handle POST requests to create a new post associated with the author
-                #request.data['author'] = author.key  # Set the author for the new post # Require author in post
-    
-                request.data['post'] = post.key
-                serializer = CommentSerializer(data=request.data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                if request.method == 'GET':
+                    comments = Comment.objects.filter(post=post)
+                    
+                    serializer = CommentSerializer(comments, many=True)
+                    # Sanitize HTML content in the list view
+                    for comment in serializer.data:
+                        comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                        comment['author'] = AuthorKeyToJson(comment['author'])
+                    return Response(serializer.data)
+                if request.method == 'POST':
+                    # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
+                    # Handle POST requests to create a new post associated with the author
+                    #request.data['author'] = author.key  # Set the author for the new post # Require author in post
+        
+                    request.data['post'] = post.key
+                    serializer = CommentSerializer(data=request.data)
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Comment.DoesNotExist:
+                return Response("There are no comments", status=status.HTTP_404_NOT_FOUND)
         except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)      
+            return Response("Post does not exist",status=status.HTTP_404_NOT_FOUND)      
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -436,9 +440,19 @@ def CommentDetail(request, post_key, author_key, comment_key):
             post = Post.objects.get(key=post_key)
             try:
                 comment = Comment.objects.get(key=comment_key)
+                
                 if request.method == 'GET':
-                        serializer = CommentSerializer(comment)
-                        return Response(serializer.data)
+                    obj = {}
+                    serializer = CommentSerializer(comment)
+                    # Sanitize HTML content in the comment
+                    comment.comment = bleach.clean(comment.comment, tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                    
+                    for key in serializer.data:
+                        obj[key] = serializer.data[key]
+                        if key == 'author':
+                            obj['author'] = AuthorKeyToJson(obj['author'])
+                    return JsonResponse(obj)
+                
                 elif request.method == 'DELETE':
                         comment.delete()
                         return Response(status=status.HTTP_204_NO_CONTENT)

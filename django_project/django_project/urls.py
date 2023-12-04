@@ -89,6 +89,7 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/posts', PostList, name='post-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>', PostDetail, name='post-detail'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/image', PostImage, name='post-image'),
-
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
 
 ]

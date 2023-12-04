@@ -126,7 +126,7 @@ class Comment(models.Model):
 
 
     def generate_origin_url(self):
-        current_host = self.author.host
+        current_host = self.author.host.rstrip('/')
         author_key= self.post.author.key
         post_key = self.post.key
         url = current_host.strip("/") + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
