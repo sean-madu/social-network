@@ -32,6 +32,19 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a user.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'Username': openapi.Schema(type=openapi.TYPE_STRING, description='username'),
+            'Password': openapi.Schema(type=openapi.TYPE_STRING, description='password'),
+        }, 
+        required = ['Username','Password']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
 @api_view(['POST'])
 @csrf_exempt
 @permission_classes([])
