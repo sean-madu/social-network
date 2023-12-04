@@ -26,40 +26,6 @@ export default function Homepage() {
   let headers = { 'Authorization': `Bearer ${accessCookie}` }
 
 
-  //We should query for the actual things here
-  //Maybe recheck these every couple seconds?
-  //Consider breaking down into components if this gets to big
-  // Places to break it dowm. Navbar buttons can be one component. Whole navbar can be one component
-  let testNotifs = [
-    {
-      type: "comment", displayName: "sean", post: {
-        id: SERVER_ADDR + "author/Obama/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
-        content: 'This is the content of post 1.',
-        liked: false,
-        author: 'Obama',
-        proxy: true
-      }, comment: "Yoo this looks fire"
-    },
-    {
-      type: "comment", displayName: "sean2", post: {
-        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfhs",
-        content: 'This is the content of post 2.',
-        liked: true,
-        author: 'Rando123',
-        proxy: true
-      }, comment: "Wow please delete your account"
-    },
-    {
-      type: "like", displayName: "sham1", post: {
-        id: SERVER_ADDR + "author/Rando123/posts/sjdfnskjdfnksjdfn/comments/jsdfjhsdjfh",
-        content: 'This is the content of post 3.',
-        liked: true,
-        author: 'Rando123',
-        proxy: true
-      }
-    }
-
-  ];
 
   //Props
   const [friendRequests, setFriendRequests] = useState([]); //TODO hook this up with the database
@@ -68,12 +34,33 @@ export default function Homepage() {
   const [username, setUsername] = useState("");
   const [posts, setPosts] = useState([]);
   const [notifs, setNotifs] = useState([]);
+  const [githubContent, setGithubContent] = useState([]);
 
   const fetchAuthor = () => {
     return fetch(`${SERVER_ADDR}service/authors/${userID}`, { headers })
       .then((res) => {
         if (res.ok) {
-          return res.json().then((json) => setUsername(json.displayName))
+          return res.json().then((json) => {
+            setUsername(json.displayName)
+
+            let github = json.github.slice(json.github.lastIndexOf("/"))
+            if (github != "") {
+              github = github.replaceAll("/", "")
+
+              fetch(`https://api.github.com/users/${github}/events`)
+                .then((res) => {
+                  if (res.ok) {
+                    res.json().then((j) => {
+                      setGithubContent(j.slice(0, 3))
+                    })
+                  }
+                  else {
+                    console.log(res, "NO GITHUT")
+                  }
+                })
+            }
+
+          })
         } else {
           if (res.status == 401)
             refreshCookies(
@@ -84,6 +71,16 @@ export default function Homepage() {
                     if (res.ok) {
                       return res.json().then((json) => {
                         setUsername(json.displayName)
+                        let github = json.github.slice(json.github.lastIndexOf("/"))
+                        alert(github)
+                        fetch(`https://api.github.com/users/${github}/events`)
+                          .then((res) => {
+                            if (res.ok) {
+                              res.json().then((j) => {
+                                alert(j)
+                              })
+                            }
+                          }) 
                       })
                     }
                   })
@@ -255,7 +252,7 @@ export default function Homepage() {
             <Post getPosts={fetchAuthorPosts} editing={false} />
           </div>
           <div className={activeNav === 4 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
-            <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} getAuthor={fetchAuthor} />
+            <ProfilePage userPosts={userPosts} getUserPosts={fetchAuthorPosts} username={username} notUser={false} getAuthor={fetchAuthor} githubContent={githubContent} />
           </div>
           <div className={activeNav === 5 ? "tab-pane fade show active" : "tab-pane fade"} id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabIndex="0">
             <AuthorList />
