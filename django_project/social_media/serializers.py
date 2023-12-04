@@ -9,6 +9,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = '__all__'
 
+    # customize represenattion of serialized data 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['type'] = 'post'
