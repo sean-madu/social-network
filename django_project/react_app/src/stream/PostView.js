@@ -355,7 +355,8 @@ export default function PostView(props) {
 
 
           </div>
-          <ul class="list-group">
+          {(props.user || props.post.visibility.toUpperCase() != "FRIENDS") &&
+            < ul class="list-group">
             <li class="list-group-item">
               <div className="row">
 
@@ -369,7 +370,7 @@ export default function PostView(props) {
 
               </div>
             </li>
-          </ul>
+            </ul>}
         </div>
       </>
     )
@@ -381,6 +382,13 @@ export default function PostView(props) {
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
       <small>{username}</small>
     </div>
+    {
+      props.post.visibility.toUpperCase() == "FRIENDS" &&
+      <div class="alert alert-success  " role="alert">
+        Private Post
+      </div>
+    }
+
     {props.post.contentType == "text/plain" ? <div>{props.post.content}</div> : <ReactMarkdown>{props.post.content}</ReactMarkdown>}
 
     {props.user && getUserOptions()}
