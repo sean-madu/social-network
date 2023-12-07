@@ -431,8 +431,12 @@ def CommentList(request, author_key, post_key):
    
                     serializer = CommentSerializer(data=request.data)
                     if serializer.is_valid():
-                        serializer.save()
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                        
+                        comment = serializer.save()
+                        comment = serializer.data
+                        comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                        comment['author'] = AuthorKeyToJson(comment['author'])
+                        return JsonResponse(comment)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             except Comment.DoesNotExist:
                 return Response("There are no comments", status=status.HTTP_404_NOT_FOUND)
@@ -690,7 +694,7 @@ def FollowerDetailAPI(request, author_key, foreign_id):
     if request.method == 'PUT':
         try:
             author = Author.objects.get(pk=author_key)
-            follower = Author.objects.get(pk=foreign_id) # We can assume author already exists because follow request shouldve saved it
+            follower = Author.objects.get(id__endswith=f"/{foreign_id}") # We can assume author already exists because follow request shouldve saved it
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         print("got here")
@@ -701,7 +705,7 @@ def FollowerDetailAPI(request, author_key, foreign_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     if request.method == 'GET':
         author = Author.objects.get(pk=author_key)
-        foreign = Author.objects.get(pk=foreign_id)
+        foreign = Author.objects.get(id__endswith=f"/{foreign_id}")
         try:
             follower = Follower.objects.get(object=author, actor=foreign)
             serializer = AuthorSerializer(foreign)
@@ -710,9 +714,9 @@ def FollowerDetailAPI(request, author_key, foreign_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'DELETE':
         author_id = Author.objects.get(pk=author_key)
-        follower = Author.objects.get(pk=foreign_id)
+        follower = Author.objects.get(id__endswith=f"/{foreign_id}")
         try:
-            follower = Follower.objects.get(object=author_id, actor=foreign_id)
+            follower = Follower.objects.get(object=author_id, actor=follower)
             follower.delete()
         except Follower.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -936,7 +940,8 @@ def InboxViewAPI(request, author_key):
                     like = serializer.save()
                     serializer = InboxItemSerializer(data={"author": author.key, "like":like.key, "type":"Like"})
                     if serializer.is_valid():
-                        serializer.save()
+                        comment = serializer.save()
+
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     else:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   

@@ -75,11 +75,14 @@ urlpatterns = [
     path('service/authors/', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
-        path('service/authors/<uuid:author_key>/friends/', FriendsList, name="friends-list"),
+    path('service/authors/<uuid:author_key>/friends/', FriendsList, name="friends-list"),
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox/', InboxViewAPI, name='inbox'),
     path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
 
     #Remote authors (No slash)
     path('service/authors', AuthorListAPI, name='author-list'),
@@ -93,5 +96,8 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/image', PostImage, name='post-image'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/likes', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/liked', LikesForLiked, name='liked-list'),
 
 ]

@@ -84,6 +84,7 @@ const executeRemoteNoBody = (node = { password: "cmput404", username: "teamgood"
   }
   console.log(node, "node log")
   let url = node.remote_ip + path
+  if (!path) { console.log("no path??"); return }
   if (path.indexOf(node.remote_ip) != -1) {
     url = path
   }

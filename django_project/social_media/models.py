@@ -72,7 +72,7 @@ class Post(models.Model):
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
-    description = models.TextField(default="Why the fuck is this here", editable=False)
+    description = models.TextField(default="Wow what a description", editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     categories = models.JSONField(null=True)
     count = models.IntegerField(default=0)

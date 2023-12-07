@@ -35,14 +35,11 @@ export default function Post(props) {
     let type = 'text/plain'
     let unlisted = "False"
     let visibility = "PUBLIC"
+    let content = postContent
     if (selectedOption == 'markdown') {
       type = "text/markdown"
 
     }
-    else if (selectedOption == 'image') {
-      type = ""
-    }
-
     if (document.getElementById("publicPost").checked) {
       visibility = "PUBLIC"
       notify = true
@@ -61,7 +58,7 @@ export default function Post(props) {
     //TODO handle images
     return {
       title: "Post from team===good",
-      content: postContent,
+      content: content,
       unlisted: unlisted,
       description: "Post description from team===good",
       contentType: type,
@@ -361,14 +358,31 @@ export default function Post(props) {
             )}
 
             {/* Post Button */}
-            <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-end m-2">
               <button
                 onClick={handlePostClick}
                 disabled={postContent.trim() === ''}
                 className="btn btn-primary"
               >
-                Post
+                Post Text
               </button>
+              <div className='d-flex justify-content-end m-2'>
+                <button
+                  disabled={selectedImage == null}
+                  className="btn btn-primary"
+                  onClick={(e) => { }}
+                >
+                  Post Image
+                </button>
+              </div>
+              <div className='d-flex justify-content-end m-2'>
+                <button
+                  disabled={selectedImage == null || postContent.trim() === ''}
+                  className="btn btn-primary"
+                >
+                  Post Embedded
+                </button>
+              </div>
             </div>
 
             {/* Post Preview */}
