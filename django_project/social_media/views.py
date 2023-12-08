@@ -344,8 +344,10 @@ def PostDetail(request, author_key, post_key):
 
             elif request.method == 'POST':
                 # Handle POST requests to update a specific post
-                serializer = PostSerializer(post, data=request.data, partial=True)
-                request.data['author'] = author.key
+                data = request.data.copy()
+                data['author'] = author.key
+                serializer = PostSerializer(post, data=data, partial=True)
+               
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
@@ -455,7 +457,10 @@ def CommentList(request, author_key, post_key):
                     # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
                     # Handle POST requests to create a new post associated with the author
                     data = request.data.copy()
-                    author = Author.objects.get(id = request.data['author']['id'])
+                    try:
+                        author = Author.objects.get(id = request.data['author']['id'])
+                    except:
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
                     data['author'] = author.key  # Set the author for the new post # Require author in post
         
                     data['post'] = post.key
