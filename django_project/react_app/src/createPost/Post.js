@@ -30,51 +30,9 @@ export default function Post(props) {
   const userID = urlParams.get('user');
   let notify = true
   let friends = true
+  let imageFile = null; // Store the image file if provided
 
-  const createPostItem = async () => {
-    let type = 'text/plain';
-    let unlisted = 'False';
-    let visibility = 'PUBLIC';
-    let content = postContent;
-    let imageFile = null; // Store the image file if provided
-  
-    if (selectedOption === 'markdown') {
-      type = 'text/markdown';
-    }
-  
-    // Update visibility based on user input
-    if (document.getElementById('publicPost').checked) {
-      visibility = 'PUBLIC';
-    } else if (document.getElementById('privatePost').checked) {
-      visibility = 'FRIENDS';
-    } else {
-      unlisted = 'True';
-      visibility = 'FRIENDS';
-    }
-  
-    // Handle image input
-    const imageInput = document.getElementById('imageInput');
-    if (imageInput && imageInput.files.length > 0) {
-      imageFile = imageInput.files[0];
-  
-      // Read the image asynchronously
-      const imageData = await readImageAsync(imageFile);
-  
-      // Attach the image data to the content or process it as needed
-      content += `\n![Image](data:${imageFile.type};base64,${imageData})`;
-    }
-  
-    return {
-      title: 'Post from team===good',
-      content: content,
-      unlisted: unlisted,
-      description: 'Post description from team===good',
-      contentType: type,
-      visibility: visibility,
-      image: imageFile,
-    };
-  };
-  
+
   // Function to read image asynchronously and return base64 data
   const readImageAsync = (file) => {
     return new Promise((resolve, reject) => {
@@ -86,7 +44,56 @@ export default function Post(props) {
       reader.readAsDataURL(file);
     });
   };
-  
+
+
+  const createPostItem = async () => {
+    let type = 'text/plain'
+    let unlisted = "False"
+    let visibility = "PUBLIC"
+    let content = postContent
+    if (selectedOption == 'markdown') {
+      type = "text/markdown"
+
+    }
+    if (document.getElementById("publicPost").checked) {
+      visibility = "PUBLIC"
+      notify = true
+      friends = false
+    }
+    else if (document.getElementById("privatePost").checked) {
+      visibility = "FRIENDS"
+      notify = true
+      friends = true
+    }
+    else {
+      unlisted = "True"
+      visibility = "FRIENDS"
+      notify = false
+    }
+
+    // Handle image input
+    const imageInput = document.getElementById('imageInput');
+    if (imageInput && imageInput.files.length > 0) {
+      imageFile = imageInput.files[0];
+
+      content = ""
+      type = imageFile.type + ";base64"
+      // Read the image asynchronously
+      const imageData = await readImageAsync(imageFile);
+
+      // Attach the image data to the content or process it as needed
+
+      content += `\n![Image](data:${imageFile.type};base64,${imageData})`;
+    }
+    return {
+      title: "Post from team===good",
+      content: content,
+      unlisted: unlisted,
+      description: "Post description from team===good",
+      contentType: type,
+      visibility: visibility,
+    }
+  }
   // Handle textarea input change
   const handleInputChange = (e) => {
     setPostContent(e.target.value);
@@ -208,46 +215,55 @@ export default function Post(props) {
   }
 
   const postToStream = (redo = true) => {
-    const createPost = createPostItem();
-    fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`, {
-      method: 'POST',
-      body: JSON.stringify(createPost),
-      headers: {
-        'Content-type': 'application/json; charset=UTF-8',
-        Authorization: `Bearer ${accessCookie}`,
-      },
+    createPostItem().then((createPost) => {
+      fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`, {
+        method: 'POST',
+        body: JSON.stringify(createPost),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+          Authorization: `Bearer ${accessCookie}`,
+        },
+      })
+        .then((res) => {
+
+          if (res.ok) {
+            res.json().then((post) => {
+              console.log(post, "post to stream")
+              // Check if the content type is an image
+              if (createPost.contentType.startsWith('image/')) {
+                alert(`Image posted! You can embed it using this URL: ${post.id}/image`);
+              } else {
+                alert('Post made to Stream');
+                console.log(createPost.contentType)
+              }
+              if (notify && friends) {
+                getFriends(post)
+              }
+              else if (notify && !friends) {
+                getFollowers(post)
+              }
+              else {
+                let url = `${SERVER_ADDR}post?user=${post.author.key}&post=${post.key}`
+                alert(`Your post can be shared with this link: ${url} if you made it unlisted`)
+              }
+            })
+
+            //props.getPosts()
+          }
+          else if (res.status == 401 && redo) {
+            refreshCookies(() => {
+              postToStream(false)
+            })
+          }
+          else {
+            console.log(res)
+            res.json().then((json) => console.log(json))
+          }
+        })
     })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then((post) => {
-            console.log(post, 'post to stream');
-  
-            // Check if the content type is an image
-            if (createPost.contentType.startsWith('image/')) {
-              alert(`Image posted! You can embed it using this URL: ${post.id}/image`);
-            } else {
-              alert('Post made to Stream');
-            }
-  
-            if (notify && friends) {
-              getFriends(post);
-            } else if (notify && !friends) {
-              getFollowers(post);
-            } else {
-              alert(`Your post can be shared with this link: ${post.id} if you made it unlisted`);
-            }
-          });
-        } else if (res.status === 401 && redo) {
-          refreshCookies(() => {
-            postToStream(false);
-          });
-        } else {
-          console.log(res);
-          res.json().then((json) => console.log(json));
-        }
-      });
-  };
-  
+
+
+  }
   // Handle post button click
   const handlePostClick = () => {
 
@@ -344,6 +360,7 @@ export default function Post(props) {
 
 
             {/* Textarea for post content */}
+            {selectedOption != 'image' &&
             <div className="mb-3 d-flex">
               <textarea
                 id='postContent'
@@ -353,14 +370,15 @@ export default function Post(props) {
                 className="form-control col-md-12"
                 placeholder="Write your post here..."
               />
-            </div>
+              </div>}
 
 
             {/* Image Upload */}
             {/* Editing images looks like work so not allowed for now*/}
-            {!editing && <div className="mb-3">
+            {!editing && selectedOption == "image" && <div className="mb-3">
               <label className="mb-0">Upload Image:</label>
-              <input
+              <input 
+                id='imageInput'
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
@@ -386,7 +404,7 @@ export default function Post(props) {
                 disabled={postContent.trim() === ''}
                 className="btn btn-primary"
               >
-                Post Text
+                Post
               </button>
             </div>
 
