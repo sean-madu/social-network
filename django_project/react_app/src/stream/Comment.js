@@ -20,65 +20,6 @@ export default function Comment(props) {
   }
 
 
-  useEffect(() => {
-
-    fetch(`${props.comment.id.slice(0, props.comment.id.indexOf("/auth"))}/authors/${props.comment.author}/`, { headers })
-      .then((res) => {
-        if (res.ok) {
-
-
-          res.json().then(
-            (json) => {
-              console.log("Comment json", json)
-              setAuthor(json.displayName)
-            }
-          )
-            .catch((e) => { console.log(e) })
-        }
-        else if (res.status == 401) {
-          refreshCookies(() => {
-            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-            fetch(`${SERVER_ADDR}authors/${props.comment.author}/`, { headers })
-              .then((res) => {
-                if (res.ok) {
-                  res.json().then(
-                    (json) => {
-                      setAuthor(json.displayName)
-                    }
-                  )
-                }
-              })
-          })
-      }
-    })
-
-    fetch(`${props.comment.id}`, { headers })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then(
-            (json) => {
-              setComment(json.comment)
-            }
-          )
-        }
-        else if (res.status == 401) {
-          refreshCookies(() => {
-            headers = { 'Authorization': `Bearer ${getCookie("access")}` }
-            fetch(`${props.comment.id}`, { headers })
-              .then((res) => {
-                if (res.ok) {
-                  res.json().then(
-                    (json) => {
-                      setComment(json.comment)
-                    }
-                  )
-                }
-              })
-          })
-      }
-    })
-  }, []);
-
   return (
     <>
       <div className="col">
@@ -87,11 +28,11 @@ export default function Comment(props) {
         </div>
 
         <div className="row">
-          {author}
+          {props.comment.author.displayName}
         </div>
       </div>
       <div className="col">
-        {comment}
+        {props.comment.comment}
       </div>
     </>
 

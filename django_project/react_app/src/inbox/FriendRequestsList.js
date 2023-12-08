@@ -47,8 +47,9 @@ export default function FriendRequestsList(props) {
         }
         else if (res.ok) { alert("Request accepted!") }
         else {
+          res.text().then((j) => console.log(j, res))
           console.log(res)
-          res.json().then((j) => console.log(j))
+
         }
       })
 

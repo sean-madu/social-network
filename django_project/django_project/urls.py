@@ -17,7 +17,9 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList
+from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList, FriendsList
+from social_media.views import PostImage, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
+from social_media.views import Register
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -37,22 +39,23 @@ urlpatterns = [
     path('', views.index, name='index'),
     path("profile", views.index, name="index"),
     path("homepage", views.index, name="index"),
-    path("register/", views.index, name="index"),
+    path("register/", views.index, name="register"),
     
-    # Authors
+    #Local Authors
     path('authors/', AuthorList, name='author-list'),
     path('authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
     path('authors/<uuid:author_key>/followers/', FollowerList, name="follower-list"),
     path('authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetail, name="follower-detail"),
     path('user/<str:username>/', getAuthorFromUser, name="get-author"),
     path('authors/<uuid:author_key>/inbox/', InboxView, name='inbox'),
-    # Posts
+    # Local Posts
     path('authors/<uuid:author_key>/posts/', PostList, name='post-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
+    path('authors/<uuid:author_key>/posts/<uuid:post_key>/image', PostImage, name='post-image'),
     # Comments
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
-    # Likes
+    # Local Likes
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
     path('authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
@@ -66,16 +69,35 @@ urlpatterns = [
     # Auth
     path('auth/', include('social_media.urls')),
 
-    # Api
+    #Register
+    path('service/register/', Register, name="register"),
+    #Remote authors
     path('service/authors/', AuthorListAPI, name='author-list'),
     path('service/authors/<uuid:author_key>/', AuthorDetail, name='author-detail'),
+    path('service/authors/<uuid:author_key>/followers/', FollowerListAPI, name="follower-list"),
+    path('service/authors/<uuid:author_key>/friends/', FriendsList, name="friends-list"),
+    path('service/authors/<uuid:author_key>/followers/<str:foreign_id>/', FollowerDetailAPI, name="follower-detail"),
+    path('service/authors/<uuid:author_key>/inbox/', InboxViewAPI, name='inbox'),
+    path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/', PostDetail, name='post-detail'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
+
+    #Remote authors (No slash)
+    path('service/authors', AuthorListAPI, name='author-list'),
+    path('service/authors/<uuid:author_key>', AuthorDetail, name='author-detail'),
     path('service/authors/<uuid:author_key>/followers', FollowerListAPI, name="follower-list"),
+    path('service/authors/<uuid:author_key>/friends', FriendsList, name="friends-list"),
     path('service/authors/<uuid:author_key>/followers/<str:foreign_id>', FollowerDetailAPI, name="follower-detail"),
     path('service/authors/<uuid:author_key>/inbox', InboxViewAPI, name='inbox'),
-    path('service/authors/<uuid:author_key>/posts/', PostList, name='post-list'),
+    path('service/authors/<uuid:author_key>/posts', PostList, name='post-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>', PostDetail, name='post-detail'),
-
-
-
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/image', PostImage, name='post-image'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/', CommentList, name='comment-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>', CommentDetail, name='comment-detail'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/likes', LikesForLikes, name='likes-list'),
+    path('service/authors/<uuid:author_key>/liked', LikesForLiked, name='liked-list'),
 
 ]
