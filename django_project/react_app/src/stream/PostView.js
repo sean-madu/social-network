@@ -25,6 +25,7 @@ import { json } from "react-router-dom";
 export default function PostView(props) {
 
 
+
   const fetchAuthorDetails = (id, redo = true) => {
     if (id.startsWith(SERVER_ADDR)) {
       return fetch(`${id}`, { headers })
@@ -123,15 +124,47 @@ export default function PostView(props) {
   const [username, setUsername] = useState("");
   const [comments, setComments] = useState([]);
   const [hitSubmit, setHitSubmit] = useState(false);
-
+  const [likes, setLikes] = useState([]);
+  const [showLikes, setShowLikes] = useState(false)
 
   let authorId = post.author.id
   fetchAuthorDetails(authorId);
 
+  const fetchLikes = (redo = true) => {
+    //Fetch Likes
+    let headers = { 'Authorization': "Bearer " + getCookie("access") }
+    fetch(post.id + "/likes", {
+      headers
+
+    })
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((json) => {
+            setLikes(json.items)
+          })
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            fetchLikes(false)
+          })
+        }
+        else {
+          res.text().then((T) => console.log(T))
+        }
+      })
+  }
+
+
 
   useEffect(() => {
     fetchComments(post.id)
+
+
   }, [hitSubmit]);
+
+  useEffect(() => {
+    fetchLikes()
+  }, [showLikes])
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -410,6 +443,31 @@ export default function PostView(props) {
     {(!(props.proxy) || props.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
       <i class="bi bi-chat-square-dots"></i>
     </button>}
+
+    {
+      props.post.visibility.toUpperCase() == "FRIENDS" && (!(props.proxy) || props.user) &&
+      <button className="btn btn-primary-outline" onClick={() => { setShowLikes(!showLikes); }} style={{ color: "blue" }}>
+        <i class="bi bi-eye"></i>
+      </button>
+    }
+    {
+      showLikes &&
+      <>
+        <div>
+          LIKES
+
+        </div>
+        <ul className="list-group">
+          {
+            likes.map((elem) => {
+              return <li className="list-group-item" >
+                {elem.author.displayName}
+              </li>
+            })
+          }
+        </ul>
+      </>
+    }
 
 
 

@@ -208,7 +208,8 @@ export default function Post(props) {
               getFollowers(post)
             }
             else {
-              alert(`Your post can be shared with this link: ${post.id} if you made it unlisted`)
+              let url = `${SERVER_ADDR}post?user=${post.author.key}&post=${post.key}`
+              alert(`Your post can be shared with this link: ${url} if you made it unlisted`)
             }
           })
 

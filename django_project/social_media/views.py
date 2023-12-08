@@ -33,35 +33,35 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-# TODO: this signup view will need to be connected to a endpoint in urls.py
-# @swagger_auto_schema(
-#     methods=['POST'],
-#     operation_description="Create a user.",
-#     request_body=openapi.Schema(
-#         type=openapi.TYPE_OBJECT,
-#         properties={
-#             'Username': openapi.Schema(type=openapi.TYPE_STRING, description='username'),
-#             'Password': openapi.Schema(type=openapi.TYPE_STRING, description='password'),
-#         }, 
-#         required = ['Username','Password']
-#     ),
-#     responses={201: 'Created', 400: 'Bad Request'}
-# )
-# @api_view(['POST'])
-# @csrf_exempt
-# @permission_classes([AllowAny])
-# def Register(request):
-#     if request.method == 'POST':
-#         try:
-#             user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
-#             user_data = {'displayName': request.data['Username'], 'author': user.id}
-#             serializer = AuthorSerializer(data=user_data)
-#             if serializer.is_valid():
-#                 serializer.save()
-#             return Response({'detail': 'User created sucessfully'}, status=status.HTTP_201_CREATED)
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(
+     methods=['POST'],
+     operation_description="Create a user.",
+     request_body=openapi.Schema(
+         type=openapi.TYPE_OBJECT,
+         properties={
+             'Username': openapi.Schema(type=openapi.TYPE_STRING, description='username'),
+             'Password': openapi.Schema(type=openapi.TYPE_STRING, description='password'),
+         }, 
+         required = ['Username','Password']
+     ),
+     responses={201: 'Created', 400: 'Bad Request'}
+ )
+@api_view(['POST'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def Register(request):
+     if request.method == 'POST':
+         try:
+             user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
+             user_data = {'displayName': request.data['Username'], 'author': user.id}
+             serializer = AuthorSerializer(data=user_data)
+             if serializer.is_valid():
+                 serializer.save()
+             return Response({'detail': 'User created sucessfully'}, status=status.HTTP_201_CREATED)
+         except Exception as e:
+             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
@@ -279,6 +279,7 @@ def PostList(request, author_key):
                 print(post)
                 post['author'] = AuthorKeyToJson(author.key)
                 print(post)
+                
                 return JsonResponse(post)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -370,7 +371,6 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-<<<<<<< HEAD
 
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 @csrf_exempt
@@ -393,13 +393,11 @@ def UnlistedPost(request, author_key, post_key):
                 return JsonResponse(obj)
 
 
-=======
 @swagger_auto_schema(
     methods=['GET'],
     operation_description="Retrieve an image post.",
     responses={200: 'OK', 404: 'Not Found'}
 )   
->>>>>>> 05fef940bb12b05ba31a6537916edb2e56cf0764
 @api_view(['GET'])
 def PostImage(request, author_key, post_key):
     try:
@@ -458,13 +456,14 @@ def CommentList(request, author_key, post_key):
                 if request.method == 'POST':
                     # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
                     # Handle POST requests to create a new post associated with the author
-                    author = Author.objects.get(id = request.data['author']['id'])
-                    request.data['author'] = author.key  # Set the author for the new post # Require author in post
-        
-                    request.data['post'] = post.key
                     data = request.data.copy()
+                    author = Author.objects.get(id = request.data['author']['id'])
+                    data['author'] = author.key  # Set the author for the new post # Require author in post
+        
+                    data['post'] = post.key
+                    
    
-                    serializer = CommentSerializer(data=request.data)
+                    serializer = CommentSerializer(data=data)
                     if serializer.is_valid():
                         
                         comment = serializer.save()
@@ -870,14 +869,25 @@ def InboxViewAPI(request, author_key):
                     actorJson = AuthorKeyToJson(followrequest.actor.key)
                     objectJson = AuthorKeyToJson(followrequest.object.key)
                     data.append({"actor": actorJson, "object": objectJson, "type": "Follow"})
-                if item['type'] == 'post':
+                elif item['type'] == 'post':
                     itemPost = Post.objects.get(pk=item['post'])
                     obj = postToJSON(itemPost)
                     data.append(obj)
-                if item['type'].upper() == "LIKE":
+                elif item['type'].upper() == "LIKE":
                     like = Like.objects.get(pk = item['like']) 
                     authorJson = AuthorKeyToJson(like.author.key)
                     serializer = LikeSerializer(like)
+                    obj = {}
+                    for key in serializer.data:
+                        if not key == 'author': 
+                            obj[key] = serializer.data[key]
+                        else:
+                            obj['author'] = authorJson
+                    data.append(obj)
+                else:
+                    comment = Comment.objects.get(pk=item['comment'])
+                    authorJson = AuthorKeyToJson(comment.author.key)
+                    serializer = CommentSerializer(comment)
                     obj = {}
                     for key in serializer.data:
                         if not key == 'author': 
@@ -987,7 +997,23 @@ def InboxViewAPI(request, author_key):
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
-
+            elif data['type'].upper() == "COMMENT":
+                try:
+                    author = Author.objects.get(id = data['author']['id'])
+                except Author.DoesNotExist:
+                    serializer = DummyAuthor(data=data['author'])
+                    if serializer.is_valid():
+                        author = serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                data = request.data.copy()
+                data['author'] = author.key
+                serializer = CommentSerializer(data=data)
+                if serializer.is_valid():
+                    comment = serializer.save()
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except Author.DoesNotExist:
