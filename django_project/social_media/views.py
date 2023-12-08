@@ -14,33 +14,55 @@ import bleach
 import urllib.parse
 
 
-BASE_URL = 'http://127.0.0.1:8000/'
+BASE_URL = 'https://cmput404-social-network-401e4cab2cc0.herokuapp.com/'
+# BASE_URL = 'http://127.0.0.1:8000/'
 
 # For authentication 
 from django.contrib.auth import authenticate, login
 import base64
 import jwt
 from django_project.settings import SECRET_KEY
+from .permissions import CustomPermission
 
 # For registering a new user
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
-from .permissions import CustomPermission
-# from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 
 # For Swagger UI api documentation
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def Register(request):
-#     if request.method == 'POST':
-#         print(request.data)
-#         user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
-#     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
-# TODO: Update the swagger scheme according to Madu's refactor
+@swagger_auto_schema(
+     methods=['POST'],
+     operation_description="Create a user.",
+     request_body=openapi.Schema(
+         type=openapi.TYPE_OBJECT,
+         properties={
+             'Username': openapi.Schema(type=openapi.TYPE_STRING, description='username'),
+             'Password': openapi.Schema(type=openapi.TYPE_STRING, description='password'),
+         }, 
+         required = ['Username','Password']
+     ),
+     responses={201: 'Created', 400: 'Bad Request'}
+ )
+@api_view(['POST'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def Register(request):
+     if request.method == 'POST':
+         try:
+             user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
+             user_data = {'displayName': request.data['Username'], 'author': user.id}
+             serializer = AuthorSerializer(data=user_data)
+             if serializer.is_valid():
+                 serializer.save()
+             return Response({'detail': 'User created sucessfully'}, status=status.HTTP_201_CREATED)
+         except Exception as e:
+             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
     methods=['GET'],
@@ -256,7 +278,6 @@ def PostList(request, author_key):
                 post = serializer.data
              
                 post['author'] = AuthorKeyToJson(author.key)
-               
                 return JsonResponse(post)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -323,8 +344,10 @@ def PostDetail(request, author_key, post_key):
 
             elif request.method == 'POST':
                 # Handle POST requests to update a specific post
-                serializer = PostSerializer(post, data=request.data, partial=True)
-                request.data['author'] = author.key
+                data = request.data.copy()
+                data['author'] = author.key
+                serializer = PostSerializer(post, data=data, partial=True)
+               
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
@@ -348,6 +371,53 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
+@api_view(['GET', 'POST', 'DELETE', 'PUT'])
+@csrf_exempt
+@permission_classes([])
+def UnlistedPost(request, author_key, post_key):
+    post = Post.objects.get(pk = post_key)
+    if post.unlisted:
+                serializer = PostSerializer(post)
+                
+
+                # Sanitize HTML content in the detail view
+                serializer.data['content'] = bleach.clean(serializer.data['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                serializer.data['author'] = AuthorKeyToJson(serializer.data['author'])
+                obj = {}
+                for key in serializer.data:
+                    
+                    obj[key] = serializer.data[key]
+                    if key == 'author':
+                        obj['author'] = AuthorKeyToJson(obj['author'])
+                return JsonResponse(obj)
+
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve an image post.",
+    responses={200: 'OK', 404: 'Not Found'}
+)   
+@api_view(['GET'])
+def PostImage(request, author_key, post_key):
+    try:
+        author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        try:
+            post = Post.objects.get(key=post_key, author=author)  # Retrieve the post by post_key and author
+            try:
+                if post.contentType.startswith('image/'):
+                    return Response(post.content)
+                else:
+                    return Response("Post is not an image", status=status.HTTP_404_NOT_FOUND)
+            except:
+                return Response("Post object error",status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        except Post.DoesNotExist:
+            return Response("Post does not exist",status=status.HTTP_404_NOT_FOUND)
+    
+    except Author.DoesNotExist:
+        return Response("Author does not exist",status=status.HTTP_404_NOT_FOUND)
+
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
     methods=['GET'],
@@ -370,30 +440,45 @@ def PostDetail(request, author_key, post_key):
 @api_view(['GET', 'POST'])
 def CommentList(request, author_key, post_key):
     try:
-        #author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
+        # author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
         try:
             post = Post.objects.get(key=post_key)
-            if request.method == 'GET':
-                comments = Comment.objects.filter(post=post)
-
-                serializer = CommentSerializer(comments, many=True)
-                # Sanitize HTML content in the list view
-                for comment in serializer.data:
-                    comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
-                return Response(serializer.data)
-            if request.method == 'POST':
-                # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
-                # Handle POST requests to create a new post associated with the author
-                #request.data['author'] = author.key  # Set the author for the new post # Require author in post
-    
-                request.data['post'] = post.key
-                serializer = CommentSerializer(data=request.data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                if request.method == 'GET':
+                    comments = Comment.objects.filter(post=post)
+                    
+                    serializer = CommentSerializer(comments, many=True)
+                    # Sanitize HTML content in the list view
+                    for comment in serializer.data:
+                        comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                        comment['author'] = AuthorKeyToJson(comment['author'])
+                    return JsonResponse({"items":serializer.data, "comments": serializer.data, "type":"comments"})
+                if request.method == 'POST':
+                    # TODO: Uncomment code below whenever ready or remove it - kept it uncommented from the merge conflict between main and this pull request 
+                    # Handle POST requests to create a new post associated with the author
+                    data = request.data.copy()
+                    try:
+                        author = Author.objects.get(id = request.data['author']['id'])
+                    except:
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                    data['author'] = author.key  # Set the author for the new post # Require author in post
+        
+                    data['post'] = post.key
+                    
+   
+                    serializer = CommentSerializer(data=data)
+                    if serializer.is_valid():
+                        
+                        comment = serializer.save()
+                        comment = serializer.data
+                        comment['comment'] = bleach.clean(comment['comment'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                        comment['author'] = AuthorKeyToJson(comment['author'])
+                        return JsonResponse(comment)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Comment.DoesNotExist:
+                return Response("There are no comments", status=status.HTTP_404_NOT_FOUND)
         except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)      
+            return Response("Post does not exist",status=status.HTTP_404_NOT_FOUND)      
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -416,9 +501,19 @@ def CommentDetail(request, post_key, author_key, comment_key):
             post = Post.objects.get(key=post_key)
             try:
                 comment = Comment.objects.get(key=comment_key)
+                
                 if request.method == 'GET':
-                        serializer = CommentSerializer(comment)
-                        return Response(serializer.data)
+                    obj = {}
+                    serializer = CommentSerializer(comment)
+                    # Sanitize HTML content in the comment
+                    comment.comment = bleach.clean(comment.comment, tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                    
+                    for key in serializer.data:
+                        obj[key] = serializer.data[key]
+                        if key == 'author':
+                            obj['author'] = AuthorKeyToJson(obj['author'])
+                    return JsonResponse(obj)
+                
                 elif request.method == 'DELETE':
                         comment.delete()
                         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -463,7 +558,12 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
                 likes = Like.objects.filter(post=post)
             
             serializer = LikeSerializer(likes, many=True)
-            return Response(serializer.data)
+            items = []
+            for item in serializer.data:
+                item['author'] = AuthorKeyToJson(item['author'])
+                items.append(item)
+
+            return JsonResponse({"type" : "likes", "items" : items})
     
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -493,7 +593,11 @@ def LikesForLikes(request, author_key, post_key, comment_key=None):
 def LikesForLiked(request, author_key):
     likes = Like.objects.filter(author=author_key)
     serializer = LikeSerializer(likes, many=True)
-    return Response(serializer.data)
+    items = []
+    for item in serializer.data:
+        item['author'] = AuthorKeyToJson(item['author'])
+        items.append(item)
+    return JsonResponse({"type":"liked", "items": items})
 
 @swagger_auto_schema(
     methods=['GET'],
@@ -525,7 +629,7 @@ def FollowerList(request, author_key):
         follower = Follower.objects.filter(object=author)
         serializer = FollowerSerializer(follower, many=True)
         return  Response(serializer.data)
-
+    
 
 def AuthorKeyToJson(key):
     author = Author.objects.get(pk = key)
@@ -547,7 +651,30 @@ def FollowerListAPI(request, author_key):
         for item in serializer.data:
             followers.append(AuthorKeyToJson(item['actor']))
         return  JsonResponse({"type": "followers", "items" : followers})
-    
+
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve all true friends of an author.",
+    responses={200: 'OK'}
+)   
+@api_view(['GET'])
+def FriendsList(request, author_key):
+    author = Author.objects.get(pk=author_key)
+    followers = Follower.objects.filter(object=author)
+    following = Follower.objects.filter(actor=author)
+    erserializer = FollowerSerializer(followers, many=True)
+    ingserializer = FollowerSerializer(following, many=True)
+    # Find the intersection of the two sets to get the friends
+    friends = []
+    # n^2 i know
+    for follower in erserializer.data:
+        for following in ingserializer.data:
+            if following['object'] == follower['actor']:
+                json = AuthorKeyToJson(following['object'])
+                if friends.count(json) == 0:
+                    friends.append(json)
+    return JsonResponse({"items": friends, "type":"friends"})
+
 @swagger_auto_schema(
     methods=['GET'],
     operation_description="Retrieve an author-follower relationship.",
@@ -609,7 +736,7 @@ def FollowerDetailAPI(request, author_key, foreign_id):
     if request.method == 'PUT':
         try:
             author = Author.objects.get(pk=author_key)
-            follower = Author.objects.get(pk=foreign_id) # We can assume author already exists because follow request shouldve saved it
+            follower = Author.objects.get(id__endswith=f"/{foreign_id}") # We can assume author already exists because follow request shouldve saved it
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         print("got here")
@@ -620,7 +747,7 @@ def FollowerDetailAPI(request, author_key, foreign_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     if request.method == 'GET':
         author = Author.objects.get(pk=author_key)
-        foreign = Author.objects.get(pk=foreign_id)
+        foreign = Author.objects.get(id__endswith=f"/{foreign_id}")
         try:
             follower = Follower.objects.get(object=author, actor=foreign)
             serializer = AuthorSerializer(foreign)
@@ -629,9 +756,9 @@ def FollowerDetailAPI(request, author_key, foreign_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'DELETE':
         author_id = Author.objects.get(pk=author_key)
-        follower = Author.objects.get(pk=foreign_id)
+        follower = Author.objects.get(id__endswith=f"/{foreign_id}")
         try:
-            follower = Follower.objects.get(object=author_id, actor=foreign_id)
+            follower = Follower.objects.get(object=author_id, actor=follower)
             follower.delete()
         except Follower.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -745,10 +872,33 @@ def InboxViewAPI(request, author_key):
                     actorJson = AuthorKeyToJson(followrequest.actor.key)
                     objectJson = AuthorKeyToJson(followrequest.object.key)
                     data.append({"actor": actorJson, "object": objectJson, "type": "Follow"})
-                if item['type'] == 'post':
+                elif item['type'] == 'post':
                     itemPost = Post.objects.get(pk=item['post'])
                     obj = postToJSON(itemPost)
                     data.append(obj)
+                elif item['type'].upper() == "LIKE":
+                    like = Like.objects.get(pk = item['like']) 
+                    authorJson = AuthorKeyToJson(like.author.key)
+                    serializer = LikeSerializer(like)
+                    obj = {}
+                    for key in serializer.data:
+                        if not key == 'author': 
+                            obj[key] = serializer.data[key]
+                        else:
+                            obj['author'] = authorJson
+                    data.append(obj)
+                else:
+                    comment = Comment.objects.get(pk=item['comment'])
+                    authorJson = AuthorKeyToJson(comment.author.key)
+                    serializer = CommentSerializer(comment)
+                    obj = {}
+                    for key in serializer.data:
+                        if not key == 'author': 
+                            obj[key] = serializer.data[key]
+                        else:
+                            obj['author'] = authorJson
+                    data.append(obj)
+
             return JsonResponse({"type": "inbox", "author": author.id, "items":  data})
         except Author.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -763,10 +913,10 @@ def InboxViewAPI(request, author_key):
             author = Author.objects.get(pk = author_key)
             
             
-            if data['type'] == 'post':
+            if data['type'].upper() == 'POST':
                    
                     if not 'key'  in data: #only local should send key
-                        print("no id")
+                        print("no key")
                         #Author might not exist yet
                         try:
                             postAuthor = Author.objects.get(id=data['author']['id'])
@@ -779,7 +929,8 @@ def InboxViewAPI(request, author_key):
                             else:
                                 print("Could not make dummy author")
                                 return Response(postAuthorSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                        
+                        if not 'unlisted' in data:
+                            data['unlisted'] = "False"
                         serializer = PostSerializer(data=data)
                         post = []
                         if serializer.is_valid():
@@ -821,6 +972,51 @@ def InboxViewAPI(request, author_key):
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            elif data['type'].upper() == "LIKE":
+                try:
+                    author = Author.objects.get(id = data['author']['id'])
+                except Author.DoesNotExist:
+                    serializer = DummyAuthor(data=data['author'])
+                    if serializer.is_valid():
+                        author = serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                data['author'] = author.key
+                if "/comment" not in data['object']:
+                    post = Post.objects.get(id=data['object'])
+                    data['post'] = post.key
+                else:
+                    comment = Comment.objects.get(id=data['object'])
+                    data['comment'] = comment.key
+                serializer = LikeSerializer(data=data)
+                if serializer.is_valid():
+                    like = serializer.save()
+                    serializer = InboxItemSerializer(data={"author": author.key, "like":like.key, "type":"Like"})
+                    if serializer.is_valid():
+                        comment = serializer.save()
+
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+            elif data['type'].upper() == "COMMENT":
+                try:
+                    author = Author.objects.get(id = data['author']['id'])
+                except Author.DoesNotExist:
+                    serializer = DummyAuthor(data=data['author'])
+                    if serializer.is_valid():
+                        author = serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                data = request.data.copy()
+                data['author'] = author.key
+                serializer = CommentSerializer(data=data)
+                if serializer.is_valid():
+                    comment = serializer.save()
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except Author.DoesNotExist:
@@ -835,6 +1031,11 @@ def InboxViewAPI(request, author_key):
             return Response(status=status.HTTP_404_NOT_FOUND)
         
 # This view returns all the nodes we are connected to currently
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Return all the nodes the app is connected to currently.",
+    responses={200: 'OK'}
+)
 @api_view(['GET'])  
 def NodesList(request):
     nodes = Node.objects.filter(enabled=True)

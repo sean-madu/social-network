@@ -13,6 +13,9 @@ class AuthorAdminForm(forms.ModelForm):
         # Allowing empty values in these fields (ONLY for admin view form submission)
         self.fields['github'].required = False
         self.fields['profileImage'].required = False
+        if not self.instance.id:
+            self.initial['id'] = self.instance.generateUrl()
+            self.initial['url'] = self.instance.generateUrl()
 
 class AuthorAdmin(admin.ModelAdmin):
     form = AuthorAdminForm

@@ -26,6 +26,7 @@ export default function ProfilePage(props) {
   let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
   const urlParams = new URLSearchParams(window.location.search);
+
   const userID = urlParams.get('user');
 
 
@@ -44,14 +45,15 @@ export default function ProfilePage(props) {
   }
 
 
+
   const handleProfileSubmit = (e) => {
     e.preventDefault()
     fetch(`${SERVER_ADDR}authors/${userID}/`,
       {
         method: "POST",
         body: JSON.stringify({
-          displayName: document.getElementById('profile-username-input').value
-
+          displayName: document.getElementById('profile-username-input').value,
+          github: document.getElementById('github-input').value
         }),
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -71,8 +73,8 @@ export default function ProfilePage(props) {
               {
                 method: "POST",
                 body: JSON.stringify({
-                  displayName: document.getElementById('profile-username-input').value
-
+                  displayName: document.getElementById('profile-username-input').value,
+                  github: document.getElementById('github-input').value
                 }),
                 headers: {
                   "Content-type": "application/json; charset=UTF-8",
@@ -86,6 +88,9 @@ export default function ProfilePage(props) {
                 }
               })
           })
+        }
+        else {
+          res.text().then((t) => { alert(t) })
         }
       })
   }
@@ -106,7 +111,7 @@ export default function ProfilePage(props) {
             </div>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Link GitHub Activity with username</label>
-              <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Or however we do this" />
+              <input type="email" class="form-control" id="github-input" placeholder="Im waiting...." />
             </div>
             {/* Image Upload */}
             <div className="mb-3">
@@ -243,7 +248,15 @@ export default function ProfilePage(props) {
                         </svg> GitHub Activity
                       </button>
                       <div className='collapse' id='gitHubActivityContent'>
-                        <h1>THIS IS WHERE THE GITHUB CONTENT WILL BE ONCE WE GET THE API</h1>
+                        {
+                          props.githubContent.map((content) => {
+                            return <ul>
+                              <li>
+                                {content.actor.login} did something on {content.repo.url}
+                              </li>
+                            </ul>
+                          })
+                        }
                       </div>
 
                     </div>

@@ -28,20 +28,41 @@ export default function Post(props) {
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get('user');
-
+  let notify = true
+  let friends = true
 
   const createPostItem = () => {
     let type = 'text/plain'
+    let unlisted = "False"
+    let visibility = "PUBLIC"
+    let content = postContent
     if (selectedOption == 'markdown') {
       type = "text/markdown"
+
+    }
+    if (document.getElementById("publicPost").checked) {
+      visibility = "PUBLIC"
+      notify = true
+      friends = false
+    }
+    else if (document.getElementById("privatePost").checked) {
+      visibility = "FRIENDS"
+      notify = true
+      friends = true
+    }
+    else {
+      unlisted = "True"
+      visibility = "FRIENDS"
+      notify = false
     }
     //TODO handle images
     return {
       title: "Post from team===good",
-      content: postContent,
-      unlisted: "False",
+      content: content,
+      unlisted: unlisted,
       description: "Post description from team===good",
       contentType: type,
+      visibility: visibility,
     }
   }
   // Handle textarea input change
@@ -92,20 +113,47 @@ export default function Post(props) {
       localInbox(follower, post)
     }
     else {
-      let path;
-      if (follower.id.indexOf("/service/") == -1) {
-        path = follower.id.slice(follower.id.indexOf("/author/"))
+      if (follower.id.endsWith("/")) {
+        follower.id = follower.id.slice(0, follower.id.length - 1)
       }
-
-      else
-        path = follower.id.slice(follower.id.indexOf("/service"))
-      console.log("type err", post)
+      let path = follower.id + "/inbox/"
       delete post.key
       NODES.executeOnRemote((j) => { console.log(j, "posted to inbox of", follower); },
-        "POST", path + "/inbox",
+        "POST", path,
         false, JSON.stringify(post), follower.id)
     }
   }
+
+  const getFriends = (post, redo = true) => {
+    fetch(`${SERVER_ADDR}service/authors/${userID}/friends`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessCookie}`
+        }
+      }
+    )
+      .then((res) => {
+        if (res.ok) {
+          alert("posting to friends")
+          res.json().then((json) => {
+            console.log(json, "friends")
+            json.items.forEach((follower) => {
+              postToInbox(follower, post)
+            })
+            props.getPosts()
+          })
+        }
+        else if (res.status == 401 && redo) {
+          refreshCookies(() => {
+            getFriends(false)
+          })
+        }
+        else {
+          res.json().then((j) => console.log(j))
+        }
+      })
+  }
+
 
   const getFollowers = (post, redo = true) => {
     fetch(`${SERVER_ADDR}service/authors/${userID}/followers`,
@@ -153,8 +201,16 @@ export default function Post(props) {
           res.json().then((post) => {
             console.log(post, "post to stream")
             alert("Post made to Stream")
-            getFollowers(post)
-
+            if (notify && friends) {
+              getFriends(post)
+            }
+            else if (notify && !friends) {
+              getFollowers(post)
+            }
+            else {
+              let url = `${SERVER_ADDR}post?user=${post.author.key}&post=${post.key}`
+              alert(`Your post can be shared with this link: ${url} if you made it unlisted`)
+            }
           })
 
           //props.getPosts()
@@ -187,7 +243,9 @@ export default function Post(props) {
         })
         .then((res) => {
           if (res.ok) {
+            props.getPosts()
             res.json((j) => getFollowers(j)) //Post update to inboxes
+
           }
           else if (res.status == 401) {
             fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
@@ -203,6 +261,10 @@ export default function Post(props) {
                   res.json((j) => getFollowers(j))
                 }
               })
+          }
+          else {
+            console.log(res)
+            res.text().then((t) => { console.log(t) })
           }
         })
 
@@ -233,8 +295,32 @@ export default function Post(props) {
               >
                 <option value="plain">Plain Text</option>
                 <option value="markdown">Markdown</option>
+                <option value="image">Image</option>
               </select>
             </div>
+
+            {/* Privacy Selection */}
+            <div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="publicPost" value="option1" checked></input>
+                <label class="form-check-label" for="exampleRadios1">
+                  PUBLIC
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="privatePost" value="option2"></input>
+                <label class="form-check-label" for="exampleRadios2">
+                  PRIVATE
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="exampleRadios" id="unlistedPost" value="option2"></input>
+                <label class="form-check-label" for="exampleRadios2">
+                  UNLISTED
+                </label>
+              </div>
+            </div>
+
 
             {/* Textarea for post content */}
             <div className="mb-3 d-flex">
@@ -273,14 +359,31 @@ export default function Post(props) {
             )}
 
             {/* Post Button */}
-            <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-end m-2">
               <button
                 onClick={handlePostClick}
                 disabled={postContent.trim() === ''}
                 className="btn btn-primary"
               >
-                Post
+                Post Text
               </button>
+              <div className='d-flex justify-content-end m-2'>
+                <button
+                  disabled={selectedImage == null}
+                  className="btn btn-primary"
+                  onClick={(e) => { }}
+                >
+                  Post Image
+                </button>
+              </div>
+              <div className='d-flex justify-content-end m-2'>
+                <button
+                  disabled={selectedImage == null || postContent.trim() === ''}
+                  className="btn btn-primary"
+                >
+                  Post Embedded
+                </button>
+              </div>
             </div>
 
             {/* Post Preview */}
