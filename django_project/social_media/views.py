@@ -168,7 +168,7 @@ def AuthorDetail(request, author_key):
         serializer = AuthorSerializer(author, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @permission_classes([CustomPermission])
@@ -267,19 +267,17 @@ def PostList(request, author_key):
 
 
         elif request.method == 'POST':
-            print(request.data)
+            # print(request.data)
             # Handle POST requests to create a new post associated with the author
             request.data['author'] = author.key  # Set the author for the new post
             
             serializer = PostSerializer(data=request.data)
             if serializer.is_valid():
-                post = serializer._validated_data
+                
                 post = serializer.save()
                 post = serializer.data
-                print(post)
+             
                 post['author'] = AuthorKeyToJson(author.key)
-                print(post)
-                
                 return JsonResponse(post)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
