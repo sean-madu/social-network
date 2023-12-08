@@ -21,26 +21,46 @@ from django.contrib.auth import authenticate, login
 import base64
 import jwt
 from django_project.settings import SECRET_KEY
+from .permissions import CustomPermission
 
 # For registering a new user
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
-from .permissions import CustomPermission
-# from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 
 # For Swagger UI api documentation
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def Register(request):
-#     if request.method == 'POST':
-#         print(request.data)
-#         user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
-#     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Create a user.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'Username': openapi.Schema(type=openapi.TYPE_STRING, description='username'),
+            'Password': openapi.Schema(type=openapi.TYPE_STRING, description='password'),
+        }, 
+        required = ['Username','Password']
+    ),
+    responses={201: 'Created', 400: 'Bad Request'}
+)
+@api_view(['POST'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def Register(request):
+    if request.method == 'POST':
+        try:
+            user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
+            user_data = {'displayName': request.data['Username'], 'author': user.id}
+            serializer = AuthorSerializer(data=user_data)
+            if serializer.is_valid():
+                serializer.save()
+            return Response({'detail': 'User created sucessfully'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
-# TODO: Update the swagger scheme according to Madu's refactor
 @permission_classes([CustomPermission])
 @swagger_auto_schema(
     methods=['GET'],
@@ -835,6 +855,11 @@ def InboxViewAPI(request, author_key):
             return Response(status=status.HTTP_404_NOT_FOUND)
         
 # This view returns all the nodes we are connected to currently
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Return all the nodes the app is connected to currently.",
+    responses={200: 'OK'}
+)
 @api_view(['GET'])  
 def NodesList(request):
     nodes = Node.objects.filter(enabled=True)
