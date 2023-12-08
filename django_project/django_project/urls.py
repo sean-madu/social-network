@@ -19,7 +19,7 @@ from . import views
 from social_media.views import AuthorDetail, AuthorList, PostList, PostDetail, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
 from social_media.views import InboxView, AuthorListAPI, FollowerListAPI, FollowerDetailAPI, InboxViewAPI, NodesList, FriendsList
 from social_media.views import PostImage, CommentList, CommentDetail, LikesForLikes, LikesForLiked, getAuthorFromUser, FollowerList, FollowerDetail
-from social_media.views import Register
+from social_media.views import Register, UnlistedPost
 from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg import openapi
@@ -69,6 +69,9 @@ urlpatterns = [
     # Auth
     path('auth/', include('social_media.urls')),
 
+
+    # Unlisted Posts,
+    path('unlisted/authors/<uuid:author_key>/posts/<uuid:post_key>/',UnlistedPost, name='unlisted-post-detail' ),
     #Register
     path('service/register/', Register, name="register"),
     #Remote authors
@@ -83,6 +86,7 @@ urlpatterns = [
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/comments/<uuid:comment_key>/likes/', LikesForLikes, name='likes-list'),
     path('service/authors/<uuid:author_key>/posts/<uuid:post_key>/likes/', LikesForLikes, name='likes-list'),
     path('service/authors/<uuid:author_key>/liked/', LikesForLiked, name='liked-list'),
+
 
     #Remote authors (No slash)
     path('service/authors', AuthorListAPI, name='author-list'),

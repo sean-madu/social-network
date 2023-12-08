@@ -365,6 +365,28 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
+@api_view(['GET', 'POST', 'DELETE', 'PUT'])
+@csrf_exempt
+@permission_classes([])
+def UnlistedPost(request, author_key, post_key):
+    post = Post.objects.get(pk = post_key)
+    if post.unlisted:
+                serializer = PostSerializer(post)
+                
+
+                # Sanitize HTML content in the detail view
+                serializer.data['content'] = bleach.clean(serializer.data['content'], tags=list(bleach.ALLOWED_TAGS) + ['p', 'br', 'strong', 'em'], attributes=bleach.ALLOWED_ATTRIBUTES)
+                serializer.data['author'] = AuthorKeyToJson(serializer.data['author'])
+                obj = {}
+                for key in serializer.data:
+                    
+                    obj[key] = serializer.data[key]
+                    if key == 'author':
+                        obj['author'] = AuthorKeyToJson(obj['author'])
+                return JsonResponse(obj)
+
+
 @api_view(['GET'])
 def PostImage(request, author_key, post_key):
     try:
