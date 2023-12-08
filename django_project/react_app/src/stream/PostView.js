@@ -25,7 +25,6 @@ import { json } from "react-router-dom";
 export default function PostView(props) {
 
 
-
   const fetchAuthorDetails = (id, redo = true) => {
     if (id.startsWith(SERVER_ADDR)) {
       return fetch(`${id}`, { headers })
@@ -112,6 +111,33 @@ export default function PostView(props) {
 
   }
 
+  const isImageUrl = (url) => {
+    return url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+  };
+
+  // Function to replace image URLs with img tags
+  const renderContent = () => {
+    const content = props.post.content;
+
+    // Use a regular expression to find image URLs
+    const imageUrlRegex = /!\[(.*?)\]\((.*?)\)/g;
+    const replacedContent = content.replace(imageUrlRegex, (match, alt, url) => {
+      if (url.startsWith("data:image")) {
+        // If the URL starts with "data:image," it's a base64 image
+        return `<img src="${url}" alt="${alt}" />`;
+      } else if (isImageUrl(url)) {
+        // If the URL is an image, replace with an img tag
+        return `<img src="${url}" alt="${alt}" />`;
+      } else {
+        // Otherwise, leave it unchanged
+        return match;
+      }
+    });
+
+    // Render the content using ReactMarkdown
+    return <ReactMarkdown>{replacedContent}</ReactMarkdown>;
+  };
+
   let post = props.post;
   const remote = !post.id.startsWith(SERVER_ADDR)
   //TODO If remote modify the headers of the request to use basic auth instead of token,
@@ -124,47 +150,15 @@ export default function PostView(props) {
   const [username, setUsername] = useState("");
   const [comments, setComments] = useState([]);
   const [hitSubmit, setHitSubmit] = useState(false);
-  const [likes, setLikes] = useState([]);
-  const [showLikes, setShowLikes] = useState(false)
+
 
   let authorId = post.author.id
   fetchAuthorDetails(authorId);
 
-  const fetchLikes = (redo = true) => {
-    //Fetch Likes
-    let headers = { 'Authorization': "Bearer " + getCookie("access") }
-    fetch(post.id + "/likes", {
-      headers
-
-    })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then((json) => {
-            setLikes(json.items)
-          })
-        }
-        else if (res.status == 401 && redo) {
-          refreshCookies(() => {
-            fetchLikes(false)
-          })
-        }
-        else {
-          res.text().then((T) => console.log(T))
-        }
-      })
-  }
-
-
 
   useEffect(() => {
     fetchComments(post.id)
-
-
   }, [hitSubmit]);
-
-  useEffect(() => {
-    fetchLikes()
-  }, [showLikes])
 
   const handleInputChange = (e) => {
     setCommentContent(e.target.value);
@@ -388,8 +382,7 @@ export default function PostView(props) {
 
 
           </div>
-          {(props.user || props.post.visibility.toUpperCase() != "FRIENDS") &&
-            < ul class="list-group">
+          <ul class="list-group">
             <li class="list-group-item">
               <div className="row">
 
@@ -403,7 +396,7 @@ export default function PostView(props) {
 
               </div>
             </li>
-            </ul>}
+          </ul>
         </div>
       </>
     )
@@ -415,13 +408,7 @@ export default function PostView(props) {
       <i className="bi bi-person-circle" style={{ fontSize: '2rem', marginRight: '10px' }}></i>
       <small>{username}</small>
     </div>
-    {
-      props.post.visibility.toUpperCase() == "FRIENDS" &&
-      <div class="alert alert-success  " role="alert">
-        Private Post
-      </div>
-    }
-
+    {renderContent()}
     {props.post.contentType == "text/plain" ? <div>{props.post.content}</div> : <ReactMarkdown>{props.post.content}</ReactMarkdown>}
 
     {props.user && getUserOptions()}
@@ -443,31 +430,6 @@ export default function PostView(props) {
     {(!(props.proxy) || props.user) && <button className="btn btn-primary-outline" onClick={() => { setShowComments(!showComments) }} style={{ color: "blue" }}>
       <i class="bi bi-chat-square-dots"></i>
     </button>}
-
-    {
-      props.post.visibility.toUpperCase() == "FRIENDS" && (!(props.proxy) || props.user) &&
-      <button className="btn btn-primary-outline" onClick={() => { setShowLikes(!showLikes); }} style={{ color: "blue" }}>
-        <i class="bi bi-eye"></i>
-      </button>
-    }
-    {
-      showLikes &&
-      <>
-        <div>
-          LIKES
-
-        </div>
-        <ul className="list-group">
-          {
-            likes.map((elem) => {
-              return <li className="list-group-item" >
-                {elem.author.displayName}
-              </li>
-            })
-          }
-        </ul>
-      </>
-    }
 
 
 
