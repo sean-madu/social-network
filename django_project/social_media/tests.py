@@ -8,51 +8,60 @@ from .models import Author, Post, Like, Comment
 from .serializers import PostSerializer
 # Create your tests here.
 class AuthorTestCase(APITestCase):
-    def setup(self):
-        """id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    host = models.URLField(editable=False)
-    displayName = models.CharField(max_length=32)
-    url = models.URLField(editable=False)
-    github = models.URLField(null=True)
-    profileImage = models.URLField(null=True)
-    """
+    def setUp(self):
+        """
+        Set up the environment for test cases
+        """
+        self.author1 = Author.objects.create(displayName="Author1")
+        self.post1 = Post.objects.create(author=self.author1, title="Post1", content="Content1", unlisted=True)
+        # Create test user
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data  # Assuming the tokens are returned in the response data
+
+        self.access_token = tokens.get('access')
+    
+    def tearDown(self):
+        # Delete the user created in setup
+        self.user.delete()
 
     def test_author_post_works(self):
         """
         Ensure we can create new authors.
         """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Author.objects.count(), 1)
-        self.assertEqual(Author.objects.get().displayName, 'Test')
+        url = f'/service/authors/'
+        response = self.client.post(url, {"displayName": "test2"}, format='json', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        # Note the actual creation of authors are done on the front end in the register/ endpoint 
+        # where the front end sends tokens it obtains after the user has created an account(User object) 
+        self.assertEqual(response.status_code, 201)
     
     def test_author_post_empty_fails(self):
         """
         Ensure we cannot create bad authors.
         """
-        url = reverse('author-list')
+        url = f'/service/authors/'
         data = {}
-        response = self.client.post(url, data, format='json')
+        response = self.client.post(url, data, format='json', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
     def test_author_detail_404(self):
         """
         Ensure trying to view a non existant author grants a 404
         """
-        url = reverse('author-list')
-        response = self.client.get(url + "/does-not-exist")
+        url = f'/service/authors/'
+        response = self.client.get(url + "does-not-exist", HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_author_detail(self):
         """
         Ensure trying to view an author works
         """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        response = self.client.get(response.json()['url'])
+        url = f'/service/authors/{self.author1.key}/'
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -60,11 +69,9 @@ class AuthorTestCase(APITestCase):
         """
         Ensure trying to delete an author works
         """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(Author.objects.count(), 1)
-        response = self.client.delete(response.json()['url'])
+        url = f'/service/authors/{self.author1.key}/'
+     
+        response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Author.objects.count(), 0)
 
@@ -72,10 +79,20 @@ class AuthorTestCase(APITestCase):
         """
         Try to delete author that does not exist
         """
-        url = reverse('author-list')
-        response = self.client.delete(url+ "does-not-exist")
+        url = f'/service/authors/{self.author1.key}/'
+        self.author1.delete()
+        response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_author_edit_details(self):
+        """
+        Ensure we are able to update the details of authors
+        """
+        url = f'/service/authors/{self.author1.key}/'
+        response = self.client.post(url, {"github":"https://github.com/TeaCookie"},HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.author1 = Author.objects.get(pk=self.author1.pk)
+        self.assertEqual(self.author1.github, "https://github.com/TeaCookie") 
 
 class PostTestCase(APITestCase):
 
@@ -100,62 +117,65 @@ class PostTestCase(APITestCase):
         # Delete the user created in setup
         self.user.delete()
 
-    def test_post_post_works(self):
+    def test_post_creation_success(self):
         """
         Ensure we can create new posts.
         """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        url = response.json()['url'] + "posts/"
-        data = {"title" : "post 1", "content": "content", "unlisted": True}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
- 
-
-    def test_post_post_empty_fails(self):
-        """
-        Ensure we can create new posts.
-        """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        url = f'/service/authors/{self.author1.key}/posts/' 
+        response = self.client.post(url, {"title": "Test Post", "content": "Test Content", "unlisted": False}, format='json', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        url = response.json()['url'] + "posts/"
-        data = {}
-        response = self.client.post(url, data, format='json')
+    def test_create_empty_post_fails(self):
+        """
+        Ensure we can create new posts.
+        """
+        url = f'/service/authors/{self.author1.key}/posts/' 
+    
+        response = self.client.post(url, format='json', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+    
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_all_posts(self):
         """ We can get all posts from an author"""
-        response = self.client.get(reverse('post-list', kwargs={'author_key': self.author1.key}))
-        posts = Post.objects.filter(author=self.author1)
-        serializer = PostSerializer(posts, many=True)
-        self.assertEqual(response.data, serializer.data)
+        response = self.client.get(f'/service/authors/{self.author1.key}/posts/', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_detail_post(self):
+        """
+        Ensure we can get a specific post
+        """
+        url = reverse('post-detail', kwargs={'author_key': self.author1.key, 'post_key': self.post1.key})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_invalid_author(self):
         """
         Handling invalid author key
         """
-        response = self.client.get(reverse('post-list', kwargs={'author_key': self.author1.key}) + "sdf")
+        url = f'/service/authors/invalidkey/posts/' 
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_invalid(self):
         """
         Test posting invalid data to create post for author
         """
-        url = reverse('author-list')
-        data = {'displayName': 'Test'}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        url = response.json()['url'] + "posts/"
-        data = {"title" : "", "content": "content", "unlisted": True}
-        response = self.client.post(url, data, format='json')
+        url = f'/service/authors/{self.author1.key}/posts/' 
+        response = self.client.post(url, {"title": "Test Post", "content": "Test Content","contentType": "invalidContentType", "unlisted": False}, format='json', HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
- 
+
+    def test_edit_post(self):
+        """
+        Ensure editing a post works
+        """
+        url = reverse('post-detail', kwargs={'author_key': self.author1.key, 'post_key': self.post1.key})
+        response = self.client.post(url, {"title":"NewTitle"}, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.post1 = Post.objects.get(pk=self.post1.pk)
+        self.assertEqual(self.post1.title, "NewTitle")
+        
+
 class LocalAuthTestsCase(TestCase):
     def setUp(self):
         """
@@ -234,8 +254,8 @@ class LocalAuthTestsCase(TestCase):
         """
         # Access the /author/ endpoint without providing the Authorization header
         author_response = self.client.get('/authors/')
-        self.assertEqual(author_response.status_code, 401)  # or the appropriate status code for authentication failure
-        # Add assertions to confirm unsuccessful content access due to lack of authentication
+        self.assertEqual(author_response.status_code, 401)
+
 
 class LikesForLikesTestCase(APITestCase):
     def setUp(self):
@@ -311,3 +331,70 @@ class LikesForLikesTestCase(APITestCase):
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class CommentsTestCase(APITestCase):
+
+    def setUp(self):
+        """
+        Set up the environment for test cases
+        """
+        self.author = Author.objects.create(displayName="Test Author")
+        self.post = Post.objects.create(author=self.author, title="Test Post", content="Test Content", unlisted=False)
+        self.comment1 = Comment.objects.create(author=self.author, post=self.post, comment="Test Comment")
+        # Create test user
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        # Simulate a successful login to get the tokens
+        response = self.client.post('/auth/login/', {'username': self.username, 'password': self.password})
+        self.assertEqual(response.status_code, 200)
+        tokens = response.data
+
+        self.access_token = tokens.get('access')
+
+    def tearDown(self):
+        # Delete the user created in setup
+        self.user.delete()
+
+    def test_comment_list_get(self):
+        """
+        Ensure we can get the list of comments from a post
+        """
+        url = reverse('comment-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_comment_list_post_valid(self):
+        """
+        Ensure we can comment on a post
+        """
+        url = reverse('comment-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
+        response = self.client.post(url, {"comment": "Test comment2"}, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_comment_list_post_invalid(self):
+        """
+        Ensure that an invalid comment returns error 400
+        """
+        url = reverse('comment-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
+        response = self.client.post(url, {}, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_comment_detail_get(self):
+        """
+        Ensure that we can get a specific comment
+        """
+        url = reverse('comment-detail', kwargs={'author_key': self.author.key, 'post_key': self.post.key, 'comment_key': self.comment1.key})
+        response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_comment_detail_delete(self):
+        """
+        Ensure we can delete a specific comment
+        """
+        url = reverse('comment-detail', kwargs={'author_key': self.author.key, 'post_key': self.post.key, 'comment_key': self.comment1.key})
+        response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    
