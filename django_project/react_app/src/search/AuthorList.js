@@ -1,19 +1,21 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, version } from "react"
 import SERVER_ADDR from "../serverAddress";
 import { refreshCookies } from "../getCookies";
 import getCookie from "../getCookies";
 import { json } from "react-router-dom";
 import * as NODES from "../Nodes"
+import Posts from "../stream/Stream";
 
 
 export default function AuthorList(props) {
 
   const [authors, setAuthors] = useState([]);
+  const [viewing, setViewing] = useState("");
+  const [posts, setPosts] = useState([]);
   const userID = `${SERVER_ADDR}authors/${new URLSearchParams(window.location.search).get('user')}`
 
   let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
   const fetchAuthors = (redo = true) => {
-    console.log("calling")
     fetch(`${SERVER_ADDR}service/authors`, { headers })
       .then((res) => {
         if (res.ok) {
@@ -21,20 +23,19 @@ export default function AuthorList(props) {
 
             setAuthors(json.items)
             NODES.executeOnRemote((json) => {
-              console.log("new node!")
+
               let nodeAuthors = json.items
-              console.log(nodeAuthors, 'node authors')
+
 
               setAuthors(prev => {
-                console.log(prev, "normal prev")
-                console.log(nodeAuthors, "normal node auth")
+
                 let arr = [...prev, ...nodeAuthors]
-                console.log(arr, "normal")
+
                 return arr
               })
 
 
-            }, "GET", "/service/authors/", true)
+            }, "GET", "authors/", true)
 
           })
         }
@@ -53,60 +54,53 @@ export default function AuthorList(props) {
       })
   }
 
-  const fetchAuthorWill = (authors) => {
-    const url = 'https://social-distribution-backend-f20f02be801f.herokuapp.com/service/authors';
-    const username = 'teamgood';
-    const password = 'cmput404';
-
-    const headers = new Headers();
-    headers.append('Authorization', 'Basic ' + btoa(username + ":" + password));
-
-    fetch(url, { method: 'GET', headers: headers })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        fetchAuthorWill2(data.items.concat(authors));
-      })
-      .catch((error) => console.error('Error:', error));
-
-  }
-
-  const fetchAuthorWill2 = (authors) => {
-    const url = 'https://whoiswill-3e3036d66f5f.herokuapp.com/service/authors/';
-    const username = 'teamgood';
-    const password = 'cmput404';
-
-    const headers = new Headers();
-    headers.append('Authorization', 'Basic ' + btoa(username + ":" + password));
-
-    fetch(url)
-      .then(response => {
-        console.log(response, "will2")
-        if (response.ok)
-          return response.json()
-        else {
-
-          console.log(response, "will2")
-        }
-      })
-      .then(data => {
-        console.log(authors, "willa")
-        let all = data.items.concat(authors)
-        setAuthors(all)
-      })
-      .catch((error) => console.error('Error:', error));
-
-  }
-
 
   useEffect(() => {
-    console.log("calling fetch func")
 
     fetchAuthors();
 
 
   }, []);
 
+  const getPosts = (redo = true) => {
+    console.log(viewing, "VIEWING THING")
+    if (viewing == "") {
+      setPosts([])
+    }
+    else if (viewing.startsWith(SERVER_ADDR)) {
+      console.log("loal viewing thing")
+      let headers = { 'Authorization': `Bearer ${getCookie("access")}` }
+      fetch(viewing + "/posts/", {
+        headers
+      })
+        .then((res) => {
+          if (res.ok) {
+            res.json().then((j) => {
+
+              setPosts(j.items.filter((val, index, arr) => { return val.visibility == "PUBLIC" }))
+            })
+          }
+          else if (res.status == 401 && redo) {
+            refreshCookies(() => {
+              getPosts(false)
+            })
+          }
+          else {
+            console.log(res)
+            res.text().then((t) => console.log(t))
+          }
+        })
+    }
+    else {
+      NODES.executeOnRemote((j) => { setPosts(j.items.filter((val, index, arr) => { return val.visibility.toUpperCase() == "PUBLIC" })); console.log("Got remote post", j) }, 'GET', viewing + "/posts/", false, null, viewing)
+    }
+
+  }
+  useEffect(() => {
+
+    getPosts()
+
+  }, [viewing]);
 
   //For some reaso, fetching authors runs more than once...
   const filterArr = (arr) => {
@@ -114,10 +108,9 @@ export default function AuthorList(props) {
     copy = copy.map((element) => {
       return JSON.stringify(element)
     });
-    console.log(copy, "elem copy")
     let unique = Array.from(new Set(copy))
     unique = unique.map((elem) => {
-      console.log(elem, "elem")
+
       return JSON.parse(elem)
     })
     return unique
@@ -181,14 +174,14 @@ export default function AuthorList(props) {
         })
     }
     else {
-      let path = "/service" + authorID.slice(authorID.indexOf("/authors")) + "/inbox"
+      let path = authorID + "/inbox"
       NODES.executeOnRemote((j) => { alert(`Request sent to remote server!`) }, 'POST', path, false, req, object.host)
     }
 
-    console.log(userID)
-    console.log(authorID)
+
 
   }
+
   return <>
     <div style={{ display: "flex", height: "70vh", alignItems: "center", flexDirection: "column", marginLeft: "5%" }} className='p-5'>
       <div className='container p-5'>
@@ -207,7 +200,13 @@ export default function AuthorList(props) {
 
                 <div className="p-2">{author.displayName}</div>
                 {!author.following && <button type="button" onClick={(e) => { getActor(author.id) }} class="btn btn-primary">SEND FOLLOW REQUEST</button>}
-
+                <button type="button" onClick={(e) => {
+                  if (viewing == author.id) {
+                    setViewing("")
+                  }
+                  else { setViewing(author.id) }
+                }} className="btn btn-primary m-2"> SEE PUBLIC POSTS </button>
+                {viewing === author.id && <Posts posts={posts} ></Posts>}
               </li>
             })}
           </ul>

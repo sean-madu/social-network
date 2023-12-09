@@ -12,12 +12,14 @@ class Author(models.Model):
     proposedUser = models.CharField(max_length=225, null=True, blank=True) 
     key = models.UUIDField(primary_key=True, default=uuid4)
     id = models.URLField(null=True)
-    host = models.URLField(null=True)
+    host = models.URLField(null=True, default="https://cmput404-social-network-401e4cab2cc0.herokuapp.com/")
     displayName = models.CharField(max_length=32)
     url = models.URLField(null=True)
     github = models.URLField(null=True)
     profileImage = models.URLField(null=True)
 
+    def generateUrl(self):
+        return str(self.host) + "service/authors/" + str(self.key)
 
     # overide save for specific fields which should be saved
     def save(self, *args, **kwargs):
@@ -26,19 +28,17 @@ class Author(models.Model):
         if not self.host.endswith("/"):
             self.host = self.host + "/"
         if not self.url:
-            host = self.host[0: len(self.host) - 1]
-            self.url = host + reverse('author-detail', kwargs={'author_key': self.key})
+            self.url = self.generateUrl()
             #get rid of trailing /
             if self.url.endswith("/"):
                 self.url = self.url[0:len(self.url) - 1] 
         if not self.id:
-            self.id = host + reverse('author-detail', kwargs={'author_key': self.key})
+            self.id = self.generateUrl()
             #get rid of trailing /
             if self.id.endswith("/"):
                 self.id = self.id[0:len(self.id) - 1]
 
         super().save(*args, **kwargs)
-
 
 
     # Change if required...
@@ -72,7 +72,7 @@ class Post(models.Model):
     title = models.CharField(max_length=255)
     source = models.URLField(null=True)
     origin = models.URLField(editable=False)
-    description = models.TextField(default="Why the fuck is this here", editable=False)
+    description = models.TextField(default="Wow what a description", editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     categories = models.JSONField(null=True)
     count = models.IntegerField(default=0)
@@ -85,9 +85,9 @@ class Post(models.Model):
 
     # generate URL for the post
     def generate_origin_url(self):
-        current_host = self.author.host
+        current_host = self.author.host.rstrip('/')
         author_key= self.author.key
-        url = current_host + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
+        url = current_host.strip("/") + reverse('post-detail', kwargs={'author_key': str(author_key), 'post_key': str(self.key)})
         return url
 
 
@@ -98,7 +98,7 @@ class Post(models.Model):
         if not self.source:
             self.source = self.generate_origin_url()
         if not self.comments:
-            self.comments = self.generate_origin_url() + "comments"
+            self.comments = self.generate_origin_url() + "/comments"
         if not self.id:
             self.id = self.generate_origin_url()
         super().save(*args, **kwargs)
@@ -128,10 +128,10 @@ class Comment(models.Model):
 
 
     def generate_origin_url(self):
-        current_host = self.author.host
+        current_host = self.author.host.rstrip('/')
         author_key= self.post.author.key
         post_key = self.post.key
-        url = current_host + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
+        url = current_host.strip("/") + reverse('comment-detail', kwargs={'author_key': str(author_key), 'post_key': str(post_key), "comment_key": str(self.key)})
         return url
 
 
@@ -158,7 +158,7 @@ class Like(models.Model):
     def generate_origin_url(self):
         current_host = self.author.host
         author_key = self.author.key
-        url = current_host
+        url = current_host.strip("/")
 
         if self.comment:  # If associated with a comment
             url += reverse('comment-detail', kwargs={'author_key': author_key, 'post_key': str(self.post.key),'comment_key': str(self.comment.key)})
@@ -214,4 +214,4 @@ class InboxItem(models.Model):
     follow_request = models.ForeignKey(FollowRequest, blank=True, null=True, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, null=True, blank=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=225) #Post, like etc
-    # like =models.URLField(blank=True, null=True)
+    like =models.ForeignKey(Like, blank=True, null=True, on_delete=models.CASCADE)

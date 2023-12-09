@@ -26,6 +26,7 @@ export default function ProfilePage(props) {
   let notUser = props.notUser
   const [selectedImage, setSelectedImage] = useState(null);
   const urlParams = new URLSearchParams(window.location.search);
+
   const userID = urlParams.get('user');
 
 
@@ -44,14 +45,15 @@ export default function ProfilePage(props) {
   }
 
 
+
   const handleProfileSubmit = (e) => {
     e.preventDefault()
     fetch(`${SERVER_ADDR}authors/${userID}/`,
       {
         method: "POST",
         body: JSON.stringify({
-          displayName: document.getElementById('profile-username-input').value
-
+          displayName: document.getElementById('profile-username-input').value,
+          github: document.getElementById('github-input').value
         }),
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -71,8 +73,8 @@ export default function ProfilePage(props) {
               {
                 method: "POST",
                 body: JSON.stringify({
-                  displayName: document.getElementById('profile-username-input').value
-
+                  displayName: document.getElementById('profile-username-input').value,
+                  github: document.getElementById('github-input').value
                 }),
                 headers: {
                   "Content-type": "application/json; charset=UTF-8",
@@ -87,6 +89,9 @@ export default function ProfilePage(props) {
               })
           })
         }
+        else {
+          res.text().then((t) => { alert(t) })
+        }
       })
   }
 
@@ -97,38 +102,14 @@ export default function ProfilePage(props) {
 
           <form className='p-5'>
             <div class="mb-3">
-              <label for="exampleFormControlInput1" class="form-label">Username</label>
-              <input type="" class="form-control" id="profile-username-input" placeholder="enter new username..." />
-            </div>
-            <div class="mb-3">
-              <label for="exampleFormControlInput1" class="form-label">Password</label>
-              <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com" />
+              <label for="exampleFormControlInput1" class="form-label">Display Name</label>
+              <input type="" class="form-control" id="profile-username-input" placeholder="enter new display Name..." />
             </div>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Link GitHub Activity with username</label>
-              <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Or however we do this" />
-            </div>
-            {/* Image Upload */}
-            <div className="mb-3">
-              <label className="mb-0">Upload Image:</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="form-control"
-              />
+              <input type="email" class="form-control" id="github-input" placeholder="Im waiting...." />
             </div>
 
-            {/* Display selected image */}
-            {selectedImage && (
-              <div className="mb-3">
-                <img
-                  src={URL.createObjectURL(selectedImage)}
-                  alt="Selected"
-                  className="img-fluid"
-                />
-              </div>
-            )}
 
             <button onClick={(e) => handleProfileSubmit(e)} class="btn btn-primary mb-5">SUBMIT</button>
 
@@ -210,24 +191,10 @@ export default function ProfilePage(props) {
                       </div>
                     </div>
                     <div className='col'>
-                      <div className='container text-center'>
-                        <div className='row'>
-                          <h6 class="card-subtitle mb-2 text-body-secondary">FOLLOWING</h6>
-                        </div>
-                        <div className='row justify-content-center'>
-                          0
-                        </div>
-                      </div>
+
                     </div>
                     <div className='col'>
-                      <div className='container text-center'>
-                        <div className='row'>
-                          <h6 class="card-subtitle mb-2 text-body-secondary">FOLLOWERS</h6>
-                        </div>
-                        <div className='justify-content-center'>
-                          0
-                        </div>
-                      </div>
+
                     </div>
                     <div className='col'>
                       {notUser && <button className='btn btn-primary'> SEND A FOLLOW REQUEST</button>}
@@ -243,7 +210,15 @@ export default function ProfilePage(props) {
                         </svg> GitHub Activity
                       </button>
                       <div className='collapse' id='gitHubActivityContent'>
-                        <h1>THIS IS WHERE THE GITHUB CONTENT WILL BE ONCE WE GET THE API</h1>
+                        {
+                          props.githubContent.map((content) => {
+                            return <ul>
+                              <li>
+                                {content.actor.login} did something on {content.repo.url}
+                              </li>
+                            </ul>
+                          })
+                        }
                       </div>
 
                     </div>

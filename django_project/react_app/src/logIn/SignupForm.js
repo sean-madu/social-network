@@ -1,17 +1,21 @@
 import "./LoginForm.css"
 import { Link } from "react-router-dom";
 import SERVER_ADDR from "../serverAddress";
+import { useState } from "react";
 export default function SignupForm() {
 
 
   //TODO the form tag work with django, fill in the action and method part of form
-  let fragments = window.location.hash;
+
+  const [error, setError] = useState("")
+
 
 
 
   const getWarning = () => {
-    return fragments.length != 0 && <div class="alert alert-danger" role="alert">
-      Username in use &#128547; Do you mean to <Link to="/" class="alert-link" > Login instead? </Link>
+    return error.length != 0 && <div class="alert alert-danger" role="alert">
+      <p>Error! Your username might be in use already!</p>&#128547; Do you mean to<Link to="/" class="alert-link" > Login instead? </Link>
+      <p>{error}</p>
     </div>
   }
 
@@ -20,7 +24,7 @@ export default function SignupForm() {
   //TODO allow the users to add their own pfp
   const handleSubmit = (e) => {
     e.preventDefault()
-    fetch(`${SERVER_ADDR}authors/`,
+    fetch(`${SERVER_ADDR}service/register/`,
       {
         method: "POST",
         body: JSON.stringify(
@@ -38,13 +42,16 @@ export default function SignupForm() {
         if (res.ok) {
           //Sucessfully posted
           res.json().then((json) => {
-            console.log(json)
-            window.location.href = `/homepage?user=${json.id}`;
+            alert("Sucessful signup! Wait for an admin to verify you")
+            setError("")
+            window.location.href = `/`
           })
         }
         else {
-          res.json().then((json) => { console.log(json) })
-          window.location.href = window.location.href + "#failed";
+          res.json().then((json) => {
+            setError(json.error);
+            console.log(json)
+          })
         }
       })
   }

@@ -90,7 +90,6 @@ export default function LoginForm() {
             <div class="d-grid gap-2">
               <button onClick={(e) => { handleSubmit(e) }} class="btn btn-primary">LOG IN</button>
               <Link to="/register" class="btn btn-secondary" > OR SIGN UP </Link>
-              <Link to="/defaultUser" > Place holder till user backend is finished</Link>
 
             </div>
 

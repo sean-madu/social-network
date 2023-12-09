@@ -288,7 +288,7 @@ class LikesForLikesTestCase(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
+        self.assertEqual(len(response.json()), 2)  # Check if two likes were retrieved
 
     def test_get_likes_on_comment(self):
         """
@@ -304,7 +304,7 @@ class LikesForLikesTestCase(APITestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # Check if two likes were retrieved
+        self.assertEqual(len(response.json()), 2)  # Check if two likes were retrieved
 
     def test_get_likes_invalid_token(self):
         url = reverse('likes-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
@@ -370,8 +370,8 @@ class CommentsTestCase(APITestCase):
         Ensure we can comment on a post
         """
         url = reverse('comment-list', kwargs={'author_key': self.author.key, 'post_key': self.post.key})
-        response = self.client.post(url, {"comment": "Test comment2"}, HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post(url, {"comment": "Test comment2", "author": {"id": self.author.id}}, HTTP_AUTHORIZATION=f'Bearer {self.access_token}', format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_comment_list_post_invalid(self):
         """
