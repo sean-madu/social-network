@@ -460,8 +460,8 @@ export default function PostView(props) {
     }
 
     {props.post.contentType == "text/plain" && <div>{postContent}</div>}
-    {props.post.contentType == 'text/markdown' && <ReactMarkdown>{postContent}</ReactMarkdown>}
-    {props.post.contentType.startsWith("image") && <img src={image[0]} alt={image[1]}></img>}
+    {props.post.contentType == 'text/markdown' && <ReactMarkdown >{postContent}</ReactMarkdown>}
+    {(props.post.contentType.startsWith("image")) && <img src={image[0]} alt={image[1]}></img>}
     {props.user && getUserOptions()}
 
     {!(props.proxy) && <><button

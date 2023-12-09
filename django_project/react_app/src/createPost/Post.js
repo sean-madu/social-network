@@ -401,7 +401,7 @@ export default function Post(props) {
             <div className="d-flex justify-content-end m-2">
               <button
                 onClick={handlePostClick}
-                disabled={postContent.trim() === ''}
+                disabled={postContent.trim() === '' && !selectedImage}
                 className="btn btn-primary"
               >
                 Post

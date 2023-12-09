@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
 
@@ -393,12 +393,15 @@ def UnlistedPost(request, author_key, post_key):
                 return JsonResponse(obj)
 
 
+
 @swagger_auto_schema(
     methods=['GET'],
     operation_description="Retrieve an image post.",
     responses={200: 'OK', 404: 'Not Found'}
 )   
 @api_view(['GET'])
+@csrf_exempt
+@permission_classes([])
 def PostImage(request, author_key, post_key):
     try:
         author = Author.objects.get(key=author_key)  # Retrieve the author by author_key
@@ -406,7 +409,29 @@ def PostImage(request, author_key, post_key):
             post = Post.objects.get(key=post_key, author=author)  # Retrieve the post by post_key and author
             try:
                 if post.contentType.startswith('image/'):
-                    return Response(post.content)
+
+                    data=  post.content
+                    contentType = 'image/png'
+                    if data.startswith("![Image]("):
+                        data = data[len("![Image]("):]
+                        data = data.strip(")")
+                    if data.startswith("data:image/png;base64,"):
+                        data = data[len("data:image/png;base64,"):]
+                       
+                    elif data.startswith("data:image/jpeg;base64,"):
+                        data = data[len("data:image/jpeg;base64,"):]
+                        contentType = 'image/jpeg'
+
+
+
+                    # Decode the base64 string
+                    imgdata = base64.b64decode(data)
+
+                    # Create a HttpResponse
+                    response = HttpResponse(imgdata, content_type=contentType)
+
+                    return response
+
                 else:
                     return Response("Post is not an image", status=status.HTTP_404_NOT_FOUND)
             except:
