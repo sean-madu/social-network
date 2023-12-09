@@ -369,7 +369,26 @@ def PostDetail(request, author_key, post_key):
     except Author.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
+@swagger_auto_schema(
+    methods=['GET'],
+    operation_description="Retrieve a unlisted post.",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['POST'],
+    operation_description="Retrieve a unlisted post. (Yes, this is correct)",
+    responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['DELETE'],
+    operation_description="Retrieve a unlisted post. (Yes, this is correct)",
+     responses={200: 'OK', 404: 'Not Found'}
+)
+@swagger_auto_schema(
+    methods=['PUT'],
+    operation_description="Retrieve a unlisted post. (Yes, this is correct)",
+     responses={200: 'OK', 404: 'Not Found'}
+)
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 @csrf_exempt
 @permission_classes([])
