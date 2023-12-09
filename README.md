@@ -11,8 +11,7 @@ Contributors / Licensing
 Authors:
     
 * Sean Madu
-* Xinheng Xie
-* Favour Nwachuwku
+* Xinheng Xie (Sean Xie)
 * Mohammed Hussain
 * Shahmeer Ali
 * Shreya Pekhale
