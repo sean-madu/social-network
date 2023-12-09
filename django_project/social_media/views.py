@@ -55,10 +55,8 @@ def Register(request):
          try:
              user = User.objects.create_user(username=request.data['Username'], password=request.data['Password'])
              user_data = {'displayName': request.data['Username'], 'author': user.id}
-             serializer = AuthorSerializer(data=user_data)
-             if serializer.is_valid():
-                 serializer.save()
              return Response({'detail': 'User created sucessfully'}, status=status.HTTP_201_CREATED)
+            
          except Exception as e:
              return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
      return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)

@@ -223,6 +223,7 @@ export default function Post(props) {
 
   const postToStream = (redo = true) => {
     createPostItem().then((createPost) => {
+      let accessCookie = getCookie("access")
       fetch(`${SERVER_ADDR}service/authors/${userID}/posts/`, {
         method: 'POST',
         body: JSON.stringify(createPost),

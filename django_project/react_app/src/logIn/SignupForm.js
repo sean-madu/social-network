@@ -15,6 +15,7 @@ export default function SignupForm() {
   const getWarning = () => {
     return error.length != 0 && <div class="alert alert-danger" role="alert">
       <p>Error! Your username might be in use already!</p>&#128547; Do you mean to<Link to="/" class="alert-link" > Login instead? </Link>
+      <p>{error}</p>
     </div>
   }
 
@@ -47,7 +48,10 @@ export default function SignupForm() {
           })
         }
         else {
-          res.json().then((json) => { setError(json.error) })
+          res.json().then((json) => {
+            setError(json.error);
+            console.log(json)
+          })
         }
       })
   }
