@@ -47,6 +47,13 @@ export default function Post(props) {
 
 
   const createPostItem = async () => {
+    //If editing all you can change is content
+    if (editing) {
+      return {
+        content: postContent,
+
+      }
+    }
     let type = 'text/plain'
     let unlisted = "False"
     let visibility = "PUBLIC"
@@ -269,41 +276,49 @@ export default function Post(props) {
 
     if (editing) {
 
-      fetch(`${props.postID}`,
+      createPostItem().then((postItem) => {
+        fetch(`${props.postID}`,
         {
           method: "POST",
-          body: JSON.stringify(createPostItem()),
+          body: JSON.stringify(postItem),
           headers: {
             "Content-type": "application/json; charset=UTF-8",
             'Authorization': `Bearer ${accessCookie}`
           }
         })
         .then((res) => {
+          console.log(res)
           if (res.ok) {
             props.getPosts()
-            res.json((j) => getFollowers(j)) //Post update to inboxes
+            //res.json((j) => getFollowers(j)) //Post update to inboxes
 
           }
           else if (res.status == 401) {
-            fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
+            refreshCookies(() => {
+              accessCookie = getCookie("access") 
+              fetch(`${SERVER_ADDR}authors/${userID}/posts/${props.postID}/`,
               {
                 method: "POST",
-                body: JSON.stringify(createPostItem()),
+                body: JSON.stringify(postItem),
                 headers: {
                   "Content-type": "application/json; charset=UTF-8",
                   'Authorization': `Bearer ${accessCookie}`
                 }
               }).then((res) => {
                 if (res.ok) {
-                  res.json((j) => getFollowers(j))
+                  props.getPosts()
+                  //res.json((j) => getFollowers(j))
                 }
               })
+            })
+
           }
           else {
             console.log(res)
             res.text().then((t) => { console.log(t) })
           }
         })
+      })
 
     }
     else {
@@ -337,26 +352,29 @@ export default function Post(props) {
             </div>
 
             {/* Privacy Selection */}
-            <div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="publicPost" value="option1" checked></input>
-                <label class="form-check-label" for="exampleRadios1">
-                  PUBLIC
-                </label>
+            {!editing && 
+              <div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exampleRadios" id="publicPost" value="option1" checked></input>
+                  <label class="form-check-label" for="exampleRadios1">
+                    PUBLIC
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exampleRadios" id="privatePost" value="option2"></input>
+                  <label class="form-check-label" for="exampleRadios2">
+                    PRIVATE
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="exampleRadios" id="unlistedPost" value="option2"></input>
+                  <label class="form-check-label" for="exampleRadios2">
+                    UNLISTED
+                  </label>
+                </div>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="privatePost" value="option2"></input>
-                <label class="form-check-label" for="exampleRadios2">
-                  PRIVATE
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="exampleRadios" id="unlistedPost" value="option2"></input>
-                <label class="form-check-label" for="exampleRadios2">
-                  UNLISTED
-                </label>
-              </div>
-            </div>
+            }
+
 
 
             {/* Textarea for post content */}
